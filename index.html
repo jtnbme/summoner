@@ -204,9 +204,9 @@ body{
       <h1 id="ovTitle">Summoner</h1>
       <p class="sub" id="ovSub">คุณไม่มีอาวุธติดตัว แต่เรียกวิญญาณมาสู้แทนได้</p>
       <dl class="help" id="help">
-        <dt>เดิน</dt><dd><span class="kb-only">WASD หรือปุ่มลูกศร</span><span class="touch-only">ลากนิ้วที่ครึ่งซ้ายของจอ</span></dd>
-        <dt>เรียก</dt><dd><span class="kb-only">คลิกบนสนาม</span><span class="touch-only">แตะบนสนาม</span> วิญญาณจะโผล่ในระยะรอบตัวคุณ</dd>
-        <dt>ล็อกเป้า</dt><dd><span class="kb-only">คลิก</span><span class="touch-only">แตะ</span>ที่ตัวศัตรูโดยตรง วิญญาณจะพุ่งไปหาตัวนั้นก่อน</dd>
+        <dt>เดิน</dt><dd><span class="kb-only">WASD หรือปุ่มลูกศร</span><span class="touch-only">แตะค้างแล้วลากนิ้วตรงไหนของจอก็ได้ จอยสติ๊กจะโผล่ตรงนิ้ว</span></dd>
+        <dt>เรียก</dt><dd><span class="kb-only">คลิกบนสนาม</span><span class="touch-only">แตะสั้นๆ บนสนาม</span> วิญญาณจะโผล่ในระยะรอบตัวคุณ</dd>
+        <dt>ล็อกเป้า</dt><dd><span class="kb-only">คลิก</span><span class="touch-only">แตะสั้นๆ</span>ที่ตัวศัตรูโดยตรง วิญญาณจะพุ่งไปหาตัวนั้นก่อน</dd>
         <dt>เก็บวิญญาณ</dt><dd>ศัตรูที่ตายจะดรอปวิญญาณ เดินเข้าใกล้เพื่อดูดเข้าตัว แล้วนำไปปลดล็อกวิญญาณใหม่และอัปเกรดในร้านค้าตอนจบเวฟ เริ่มเกมมีอิมพ์ตัวเดียว</dd>
         <dt>สลับชนิด</dt><dd><span class="kb-only">กด 1 2 3 หรือหมุนล้อเมาส์</span><span class="touch-only">แตะปุ่มด้านล่าง</span></dd>
       </dl>
@@ -302,7 +302,8 @@ let queue = [], spawnT = 0, clearing = false, breakT = 0, best = 0, newBest = fa
 const cam = { x:0, y:0 };
 const keys = new Set();
 const mouse = { x:0, y:0, inside:false };
-const stick = { active:false, id:-1, ox:0, oy:0, px:0, py:0, dx:0, dy:0 };
+const stick = { active:false, id:-1, ox:0, oy:0, px:0, py:0, sx:0, sy:0, dx:0, dy:0, t0:0, moved:false };
+const STICK_R = 55;   /* how far the thumb has to travel for full speed */
 
 function loadBest(){ try { return +localStorage.getItem('summoner-best') || 0; } catch (e) { return 0; } }
 function saveBest(v){ try { localStorage.setItem('summoner-best', String(v)); } catch (e) {} }
@@ -1095,11 +1096,12 @@ function drawPreview(){
   if (he) brackets(he.x, he.y, he.r + 11, col);
 }
 function drawStick(){
-  if (!stick.active) return;
+  /* only show it once the finger has moved or been held a moment, so quick summon taps do not flash a joystick */
+  if (!stick.active || !(stick.moved || performance.now() - stick.t0 > 160)) return;
   ctx.fillStyle = rgba(P.ink, 0.1); ctx.strokeStyle = rgba(P.ink, 0.35); ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(stick.ox, stick.oy, 55, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(stick.ox, stick.oy, STICK_R, 0, TAU); ctx.fill(); ctx.stroke();
   ctx.fillStyle = rgba(P.ink, 0.45);
-  ctx.beginPath(); ctx.arc(stick.ox + stick.dx * 55, stick.oy + stick.dy * 55, 22, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(stick.ox + stick.dx * STICK_R, stick.oy + stick.dy * STICK_R, 22, 0, TAU); ctx.fill();
 }
 
 function draw(){
@@ -1237,10 +1239,16 @@ function updateMouse(e){
 }
 cv.addEventListener('pointermove', e => {
   if (e.pointerType === 'touch' && e.pointerId === stick.id){
-    stick.px = e.clientX - cv.getBoundingClientRect().left; stick.py = e.clientY - cv.getBoundingClientRect().top;
-    let dx = (stick.px - stick.ox) / 55, dy = (stick.py - stick.oy) / 55;
-    const m = Math.hypot(dx, dy); if (m > 1){ dx /= m; dy /= m; }
-    stick.dx = dx; stick.dy = dy;
+    const r = cv.getBoundingClientRect();
+    stick.px = e.clientX - r.left; stick.py = e.clientY - r.top;
+    let dx = stick.px - stick.ox, dy = stick.py - stick.oy;
+    const m = Math.hypot(dx, dy);
+    if (!stick.moved && Math.hypot(stick.px - stick.sx, stick.py - stick.sy) > 12) stick.moved = true;
+    if (m > STICK_R){        /* floating base: the stick follows the thumb so it never runs out of room */
+      stick.ox = stick.px - dx / m * STICK_R; stick.oy = stick.py - dy / m * STICK_R;
+      dx = dx / m * STICK_R; dy = dy / m * STICK_R;
+    }
+    stick.dx = dx / STICK_R; stick.dy = dy / STICK_R;
     return;
   }
   updateMouse(e);
@@ -1249,8 +1257,13 @@ cv.addEventListener('pointerdown', e => {
   if (state !== 'play' || paused || inShop) return;
   e.preventDefault();
   updateMouse(e);
-  if (e.pointerType === 'touch' && !stick.active && mouse.x < W * 0.5 && mouse.y > H * 0.4){
-    stick.active = true; stick.id = e.pointerId; stick.ox = stick.px = mouse.x; stick.oy = stick.py = mouse.y; stick.dx = stick.dy = 0; stick.t0 = performance.now();
+  /* touch: the first finger anywhere on the field is the joystick (hold + drag = walk, quick tap = summon);
+     a second finger always summons right away */
+  if (e.pointerType === 'touch' && !stick.active){
+    stick.active = true; stick.id = e.pointerId; stick.moved = false;
+    stick.ox = stick.px = stick.sx = mouse.x; stick.oy = stick.py = stick.sy = mouse.y;
+    stick.dx = stick.dy = 0; stick.t0 = performance.now();
+    mouse.inside = false;
     try { cv.setPointerCapture(e.pointerId); } catch (err) {}
     return;
   }
@@ -1260,10 +1273,10 @@ cv.addEventListener('pointerdown', e => {
 });
 function endPointer(e){
   if (e.pointerId === stick.id){
-    /* a quick tap inside the joystick zone is a summon, not a drag */
-    const tap = e.type === 'pointerup' && performance.now() - stick.t0 < 220 && Math.hypot(stick.px - stick.ox, stick.py - stick.oy) < 14;
+    /* lifting the finger quickly without having moved it is a tap: summon where it landed */
+    const tap = e.type === 'pointerup' && !stick.moved && performance.now() - stick.t0 < 220;
     stick.active = false; stick.id = -1; stick.dx = stick.dy = 0;
-    if (tap && state === 'play' && !paused && !inShop){ const w = toWorld(stick.ox, stick.oy); summonAt(w.x, w.y, stick.ox, stick.oy); }
+    if (tap && state === 'play' && !paused && !inShop){ const w = toWorld(stick.sx, stick.sy); summonAt(w.x, w.y, stick.sx, stick.sy); }
   }
   if (e.pointerType === 'touch') mouse.inside = false;
 }
