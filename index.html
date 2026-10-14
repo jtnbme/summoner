@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>Summoner · เรียกวิญญาณสู้ศัตรู</title>
+<title>Summoner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
   --ink:#17231f; --muted:#52695f; --panel:#f1f6f2; --panel-line:#a9c0b3; --track:#b4c6bb; --slot-sel:#dfeae3; --outer:#b4c4ba;
   --robe:#2d2956; --lantern:#e0961a; --hp:#c8284f; --mana:#0b7f9e;
   --foe:#8a2a5f; --foe2:#a83a2a;
-  --imp:#d9640f; --archer:#1788a8; --golem:#4c8a14; --soul:#7a5cd6;
+  --imp:#d9640f; --mage:#3a62d4; --golem:#4c8a14; --soul:#7a5cd6; --healer:#1f9d5c;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -26,7 +26,7 @@
     --ink:#e6efe8; --muted:#8fa7a0; --panel:#0e1a19; --panel-line:#294541; --track:#1b2e2b; --slot-sel:#16292a; --outer:#050a09;
     --robe:#d9d4ee; --lantern:#ffd36b; --hp:#ff6f8f; --mana:#6fdcf5;
     --foe:#b8467f; --foe2:#d4574f;
-    --imp:#ff9a4d; --archer:#8be4ff; --golem:#b6f07a; --soul:#d7f6ff;
+    --imp:#ff9a4d; --mage:#8ab4ff; --golem:#b6f07a; --soul:#d7f6ff; --healer:#6fe3a0;
   }
 }
 :root[data-theme="dark"]{
@@ -34,7 +34,7 @@
   --ink:#e6efe8; --muted:#8fa7a0; --panel:#0e1a19; --panel-line:#294541; --track:#1b2e2b; --slot-sel:#16292a; --outer:#050a09;
   --robe:#d9d4ee; --lantern:#ffd36b; --hp:#ff6f8f; --mana:#6fdcf5;
   --foe:#b8467f; --foe2:#d4574f;
-  --imp:#ff9a4d; --archer:#8be4ff; --golem:#b6f07a; --soul:#d7f6ff;
+  --imp:#ff9a4d; --mage:#8ab4ff; --golem:#b6f07a; --soul:#d7f6ff; --healer:#6fe3a0;
 }
 *,*::before,*::after{box-sizing:inherit}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -70,29 +70,19 @@ body{
 .mana.shake{animation:nudge .3s}
 @keyframes nudge{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 
-/* Summon hotbar: three equal slots across the bottom, easy to hit with a thumb */
+/* Party bar: shows how many of each follower are alive and when the dead ones come back (read-only, touches pass through) */
 #bar{
   position:absolute;left:calc(8 * var(--u));right:calc(8 * var(--u));bottom:calc(8 * var(--u));z-index:1;
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(6 * var(--u));padding:calc(6 * var(--u));
+  display:flex;gap:calc(4 * var(--u));padding:calc(6 * var(--u));pointer-events:none;
   background:var(--panel);border:1px solid var(--panel-line);border-radius:calc(12 * var(--u));
 }
-.slot{
-  display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:calc(8 * var(--u));row-gap:0;align-items:center;
-  min-width:0;min-height:calc(48 * var(--u));padding:calc(7 * var(--u)) calc(8 * var(--u));border-radius:calc(8 * var(--u));border:2px solid transparent;
-  background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer;
-}
-.slot .dot{grid-row:1 / span 2;width:calc(14 * var(--u));height:calc(14 * var(--u));border-radius:50%}
-.slot .nm{font-weight:600;font-size:calc(13.5 * var(--u));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.slot kbd{display:none;font-family:'Mitr',sans-serif;font-size:calc(11 * var(--u));color:var(--muted);margin-right:5px}
-@media (hover:hover) and (pointer:fine){.slot kbd{display:inline}}
-.slot .cost{grid-column:2;font-family:'Mitr',sans-serif;color:var(--mana);font-size:calc(13 * var(--u))}
-.slot .note{display:none}
-.slot.sel{border-color:var(--ink);background:var(--slot-sel)}
-.slot.poor{opacity:.55}
-.slot.locked{opacity:.4;cursor:not-allowed}
-.slot.locked .cost{color:var(--muted);font-size:calc(12 * var(--u))}
-.slot.poor .cost{color:var(--hp)}
-.slot:focus-visible{outline:2px solid var(--mana);outline-offset:2px}
+.pc{flex:1 1 0;min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:calc(7 * var(--u));align-items:center;padding:calc(4 * var(--u)) calc(6 * var(--u))}
+.pc.off{display:none}
+.pc .dot{grid-row:1 / span 2;width:calc(13 * var(--u));height:calc(13 * var(--u));border-radius:50%}
+.pc .nm{font-weight:600;font-size:calc(12.5 * var(--u));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc .st{display:flex;align-items:baseline;gap:calc(5 * var(--u));font-size:calc(11 * var(--u));white-space:nowrap;overflow:hidden}
+.pc .st b{font-family:'Mitr',sans-serif;font-weight:500;font-size:calc(14 * var(--u));color:var(--ink)}
+.pc .st em{font-style:normal;color:var(--hp)}
 
 /* Banner */
 #banner{
@@ -129,9 +119,9 @@ body{
 .fine{margin:calc(12 * var(--u)) 0 0;font-size:calc(12 * var(--u));color:var(--muted)}
 
 /* Shop: fills the stage; only the list scrolls, the header and the "next wave" button stay on screen */
-#shop{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);padding:calc(8 * var(--u));z-index:6}
-#shop::before{content:"";position:absolute;inset:0;background:var(--bg);opacity:.9}
-#shop.hide{display:none}
+#shop,#perk{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);padding:calc(8 * var(--u));z-index:6}
+#shop::before,#perk::before{content:"";position:absolute;inset:0;background:var(--bg);opacity:.9}
+#shop.hide,#perk.hide{display:none}
 .panel.shoppanel{width:100%;height:100%;max-height:100%;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:calc(14 * var(--u))}
 .shoppanel h2{margin:0;font-family:'Mitr',sans-serif;font-weight:500;font-size:calc(24 * var(--u));line-height:1.1}
 .shophead{flex:none;display:flex;justify-content:space-between;align-items:flex-end;gap:calc(10 * var(--u));margin:0 0 calc(10 * var(--u))}
@@ -156,6 +146,26 @@ body{
 .shopfoot{flex:none;display:flex;flex-direction:column;align-items:stretch;gap:calc(6 * var(--u))}
 .shopfoot span{display:none;font-size:calc(12 * var(--u));color:var(--muted);text-align:center}
 @media (hover:hover) and (pointer:fine){.shopfoot span{display:block}}
+/* boss bar (inside the HUD) */
+.bossbar{display:grid;grid-template-columns:calc(56 * var(--u)) 1fr;align-items:center;gap:calc(8 * var(--u));font-size:calc(12.5 * var(--u));font-weight:600;color:var(--foe2)}
+.bossbar.hide{display:none}
+.bossbar .track{height:calc(12 * var(--u))}
+.bossbar .track i{background:var(--foe2)}
+/* special buff cards */
+.pk-cards{align-content:center;gap:calc(10 * var(--u))}
+.pk{display:grid;grid-template-columns:auto minmax(0,1fr);gap:calc(12 * var(--u));align-items:start;text-align:left;padding:calc(14 * var(--u));border:2px solid var(--panel-line);border-radius:calc(10 * var(--u));background:transparent;color:var(--ink);font:inherit;cursor:pointer}
+.pk .pd{display:block;width:calc(16 * var(--u));height:calc(16 * var(--u));border-radius:50%;margin-top:calc(4 * var(--u))}
+.pk .pb{display:grid;gap:calc(3 * var(--u));min-width:0}
+.pk .pt{font-weight:600;font-size:calc(16 * var(--u))}
+.pk .pl{font-style:normal;font-weight:400;font-size:calc(12 * var(--u));color:var(--soul);margin-left:calc(8 * var(--u))}
+.pk.new .pl{color:var(--healer)}
+.pk .px{font-size:calc(13 * var(--u));line-height:1.45}
+.pk .pm{font-size:calc(11.5 * var(--u));color:var(--muted)}
+.pk.warn .pm{color:var(--hp)}
+.pk:not(:disabled):hover{border-color:var(--soul)}
+.pk:focus-visible{outline:2px solid var(--mana);outline-offset:2px}
+.go.alt{background:transparent;color:var(--ink)}
+.go:disabled{opacity:.45;cursor:not-allowed}
 @media (prefers-reduced-motion: reduce){
   .score b.bump{animation:none}
   .rune{animation:none}
@@ -175,17 +185,28 @@ body{
     </div>
     <div class="bars">
       <div class="meter"><span class="lab">พลังชีวิต</span><div class="track"><i id="hpFill"></i></div><b id="hpNum">100</b></div>
-      <div class="meter mana" id="manaBox"><span class="lab">มานา</span><div class="track"><i id="manaFill"></i><u id="costMark"></u></div><b id="manaNum">60</b></div>
     </div>
+    <div class="bossbar hide" id="bossBar"><span id="bossName">บอส</span><div class="track"><i id="bossFill"></i></div></div>
   </div>
 
   <div id="banner" aria-live="polite"></div>
-  <div id="bar" role="toolbar" aria-label="เลือกวิญญาณที่จะเรียก"></div>
+  <div id="bar" aria-label="สถานะลูกน้อง"></div>
+
+  <div id="perk" class="hide">
+    <div class="panel shoppanel">
+      <div class="shophead">
+        <div><h2>บัฟพิเศษ</h2><p class="sub">เลือก 1 ใบ เลือกซ้ำเพื่อเพิ่มระดับ</p></div>
+        <div class="bank"><small>สุ่มใหม่ได้อีก</small><b id="rerollNum">2</b></div>
+      </div>
+      <div class="cards pk-cards" id="pcards"></div>
+      <div class="shopfoot"><button class="go alt" id="rerollBtn" type="button">สุ่มการ์ดใหม่</button></div>
+    </div>
+  </div>
 
   <div id="shop" class="hide">
     <div class="panel shoppanel">
       <div class="shophead">
-        <div><h2 id="shopTitle">เวฟผ่านแล้ว</h2><p class="sub">ปลดล็อกวิญญาณใหม่และอัปเกรดด้วยวิญญาณที่เก็บได้</p></div>
+        <div><h2 id="shopTitle">เวฟผ่านแล้ว</h2><p class="sub">ปลดล็อกลูกน้องใหม่ เพิ่มจำนวน และอัปเกรดด้วยวิญญาณที่เก็บได้</p></div>
         <div class="bank"><small>วิญญาณที่มี</small><b id="shopSouls">0</b></div>
       </div>
       <div class="cards" id="cards"></div>
@@ -205,10 +226,9 @@ body{
       <p class="sub" id="ovSub">คุณไม่มีอาวุธติดตัว แต่เรียกวิญญาณมาสู้แทนได้</p>
       <dl class="help" id="help">
         <dt>เดิน</dt><dd><span class="kb-only">WASD หรือปุ่มลูกศร</span><span class="touch-only">แตะค้างแล้วลากนิ้วตรงไหนของจอก็ได้ จอยสติ๊กจะโผล่ตรงนิ้ว</span></dd>
-        <dt>เรียก</dt><dd><span class="kb-only">คลิกบนสนาม</span><span class="touch-only">แตะสั้นๆ บนสนาม</span> วิญญาณจะโผล่ในระยะรอบตัวคุณ</dd>
-        <dt>ล็อกเป้า</dt><dd><span class="kb-only">คลิก</span><span class="touch-only">แตะสั้นๆ</span>ที่ตัวศัตรูโดยตรง วิญญาณจะพุ่งไปหาตัวนั้นก่อน</dd>
-        <dt>เก็บวิญญาณ</dt><dd>ศัตรูที่ตายจะดรอปวิญญาณ เดินเข้าใกล้เพื่อดูดเข้าตัว แล้วนำไปปลดล็อกวิญญาณใหม่และอัปเกรดในร้านค้าตอนจบเวฟ เริ่มเกมมีอิมพ์ตัวเดียว</dd>
-        <dt>สลับชนิด</dt><dd><span class="kb-only">กด 1 2 3 หรือหมุนล้อเมาส์</span><span class="touch-only">แตะปุ่มด้านล่าง</span></dd>
+        <dt>ลูกน้อง</dt><dd>เริ่มเกมมีอิมพ์ 1 ตัวกับนักเวทกระดูก 1 ตัวเดินตามคุณตลอด ไม่ต้องสั่ง อิมพ์กับโกเลมจะวิ่งไปตีศัตรูที่เข้าใกล้ นักเวทยิงลำแสงจากข้างตัวคุณ ฮีลเลอร์คอยรักษา</dd>
+        <dt>เก็บวิญญาณ</dt><dd>ศัตรูที่ตายจะดรอปวิญญาณ เดินเข้าใกล้เพื่อดูดเข้าตัว แล้วนำไปปลดล็อกลูกน้องใหม่ เพิ่มจำนวน และอัปเกรดในร้านค้าตอนจบเวฟ</dd>
+        <dt>บัฟพิเศษ</dt><dd>ทุก 3 เวฟได้เลือกการ์ดบัฟ 1 ใน 3 ใบ เลือกซ้ำเพื่อเพิ่มระดับ สุ่มใหม่ได้จำกัดครั้ง ทุก 10 เวฟจะเจอบอส</dd>
       </dl>
       <div class="stats" id="stats" hidden>
         <div><small>ถึงเวฟ</small><b id="stWave">0</b></div>
@@ -216,7 +236,7 @@ body{
         <div><small>สูงสุด</small><b id="stBest">0</b></div>
       </div>
       <button class="go" id="goBtn" type="button">เริ่มเกม</button>
-      <p class="fine" id="fine">ศัตรูแตะตัวคุณแล้วเลือดลด วิญญาณแต่ละตัวอยู่ได้จำกัดเวลา กด P เพื่อหยุดเกม</p>
+      <p class="fine" id="fine">ศัตรูแตะตัวคุณแล้วเลือดลด ลูกน้องที่ตายจะเกิดใหม่หลังรอสักครู่ กด P เพื่อหยุดเกม</p>
     </div>
   </div>
 </div>
@@ -265,7 +285,7 @@ function readPalette(){
   P = {
     bg:g('--bg'), floor:g('--floor'), dot:g('--dot'), edge:g('--edge'), ink:g('--ink'),
     robe:g('--robe'), lantern:g('--lantern'), hp:g('--hp'), mana:g('--mana'),
-    foe:g('--foe'), foe2:g('--foe2'), imp:g('--imp'), archer:g('--archer'), golem:g('--golem'), soul:g('--soul')
+    foe:g('--foe'), foe2:g('--foe2'), imp:g('--imp'), mage:g('--mage'), golem:g('--golem'), soul:g('--soul'), healer:g('--healer')
   };
 }
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -277,27 +297,40 @@ try {
 
 /* ---------- game data ---------- */
 const WORLD = { w: 2400, h: 1700 };
-let MAXMANA = 100, MANA_REGEN = 7, SUMMON_RANGE = 360, MAX_MINIONS = 10;
 const MAGNET = 90;
 const TILT = 0.74; /* how squashed the floor looks: lower = more top-down, higher = flatter */
 
+/* role: melee = charges enemies that come close, ranged = shoots from beside the player, healer = heals the weakest ally
+   ring = how far from the player it likes to stand, respawn = seconds before a dead one comes back */
 const TYPES = [
-  { key:'imp',    name:'อิมพ์',   note:'พุ่งชนเร็ว',      cost:12, hp:34,  speed:230, dmg:9,  cd:0.42, reach:6,   life:13, r:11, melee:true },
-  { key:'archer', name:'ผีธนู',   note:'ยิงจากไกล',       cost:22, hp:26,  speed:125, dmg:12, cd:0.85, reach:280, life:17, r:11, melee:false },
-  { key:'golem',  name:'โกเลม',  note:'อึด ตีแรง ระเบิดรอบเป้า', cost:40, hp:170, speed:78,  dmg:28, cd:1.15, reach:8,   life:24, r:20, melee:true, splash:64 }
+  { key:'imp',    name:'อิมพ์',     role:'melee',  hp:34,  speed:230, dmg:9,  cd:0.42, reach:6,   r:11, aggro:240, ring:62, respawn:6 },
+  { key:'mage',   name:'นักเวทกระดูก', short:'นักเวท', role:'ranged', hp:26, speed:125, dmg:20, cd:1.0, reach:300, r:11, ring:92, respawn:9 },
+  { key:'golem',  name:'โกเลม',    role:'melee',  hp:170, speed:78,  dmg:28, cd:1.15, reach:8,   r:20, aggro:200, ring:50, respawn:15, splash:64 },
+  { key:'healer', name:'ฮีลเลอร์', role:'healer', hp:30,  speed:130, heal:8, cd:1.4,  reach:260, r:11,             ring:80, respawn:12 }
 ];
+const TYPE_BY_KEY = {};
+TYPES.forEach(t => { TYPE_BY_KEY[t.key] = t; });
+const FORM = { imp:0, mage:1.0, golem:2.2, healer:3.6 };   /* angle offset so the rings do not overlap */
 const FOES = {
-  grunt:   { hp:32,  speed:68,  r:13, dmg:8,  score:10, mana:4, soul:1 },
-  runner:  { hp:18,  speed:132, r:10, dmg:6,  score:14, mana:5, soul:1 },
-  brute:   { hp:130, speed:46,  r:22, dmg:18, score:40, mana:12, soul:4 },
-  spitter: { hp:28,  speed:58,  r:12, dmg:7,  score:25, mana:8, soul:2, ranged:true }
+  grunt:   { hp:32,  speed:68,  r:13, dmg:8,  score:10, soul:1 },
+  runner:  { hp:18,  speed:132, r:10, dmg:6,  score:14, soul:1 },
+  brute:   { hp:130, speed:46,  r:22, dmg:18, score:40, soul:4 },
+  spitter: { hp:28,  speed:58,  r:12, dmg:7,  score:25, soul:2, ranged:true },
+  boss:    { hp:1500, speed:52, r:40, dmg:24, score:500, soul:30, boss:true }
 };
+const BOSS_EVERY = 10, PERK_EVERY = 3, REROLLS = 2;
+/* difficulty: grows gently up to wave 6, then much faster */
+const lateOf = w => Math.max(0, w - 6);
+const hpScale  = w => (1 + (Math.min(w, 6) - 1) * 0.09) * (1 + lateOf(w) * 0.18);
+const spdScale = w => 1 + (w - 1) * 0.015 + lateOf(w) * 0.015;
+const dmgScale = w => 1 + lateOf(w) * 0.10;
 
 /* ---------- state ---------- */
 let state = 'title', paused = false;
-let player, minions, enemies, shots, parts, floats, rings;
-let mana, wave, score, kills, selected, summonCd, shake, dmgFlash, T = 0, uid = 0;
-let orbs = [], souls = 0, inShop = false, UPG = {}, UNLOCKED = { imp:true, archer:false, golem:false };
+let player, minions, enemies, shots, parts, floats, rings, beams;
+let wave, score, kills, shake, dmgFlash, T = 0, uid = 0;
+let orbs = [], squad = [], souls = 0, inShop = false, UPG = {}, UNLOCKED = { imp:true, mage:true, golem:false, healer:false };
+let PERK = {}, perkOpen = false, rerolls = 0, cards = [], bossIdx = 0, cleanupT = 0;
 let queue = [], spawnT = 0, clearing = false, breakT = 0, best = 0, newBest = false;
 const cam = { x:0, y:0 };
 const keys = new Set();
@@ -309,10 +342,11 @@ function loadBest(){ try { return +localStorage.getItem('summoner-best') || 0; }
 function saveBest(v){ try { localStorage.setItem('summoner-best', String(v)); } catch (e) {} }
 
 function resetWorld(){
-  player = { x:WORLD.w/2, y:WORLD.h/2, r:15, hp:100, maxHp:100, speed:215, inv:0, face:Math.PI/2, bob:0 };
-  minions = []; enemies = []; shots = []; parts = []; floats = []; rings = []; orbs = [];
-  mana = 60; wave = 1; score = 0; kills = 0; selected = 0; summonCd = 0; shake = 0; dmgFlash = 0;
-  souls = 0; inShop = false; UPG = {}; UNLOCKED = { imp:true, archer:false, golem:false }; applyUpgrades();
+  player = { x:WORLD.w/2, y:WORLD.h/2, r:15, hp:100, maxHp:100, speed:215, inv:0, face:Math.PI/2, bob:0, shield:0, shieldT:0, shieldHit:0 };
+  minions = []; squad = []; enemies = []; shots = []; parts = []; floats = []; rings = []; orbs = []; beams = [];
+  wave = 1; score = 0; kills = 0; shake = 0; dmgFlash = 0;
+  souls = 0; inShop = false; UPG = {}; UNLOCKED = { imp:true, mage:true, golem:false, healer:false }; applyUpgrades();
+  PERK = {}; perkOpen = false; rerolls = 0; cards = []; bossIdx = 0;
   queue = []; spawnT = 0; clearing = false; breakT = 0;
   cam.x = clamp(player.x - W / Z / 2, 0, Math.max(0, WORLD.w - W / Z));
   cam.y = clamp(player.y - H / (Z * TILT) / 2, 0, Math.max(0, WORLD.h - H / (Z * TILT)));
@@ -320,35 +354,18 @@ function resetWorld(){
 
 /* ---------- UI refs ---------- */
 const ov = $('ov'), ovTitle = $('ovTitle'), ovSub = $('ovSub'), help = $('help'), stats = $('stats'), goBtn = $('goBtn'), fine = $('fine');
-const bar = $('bar'), bn = $('banner'), manaBox = $('manaBox');
-const hpFill = $('hpFill'), hpNum = $('hpNum'), manaFill = $('manaFill'), manaNum = $('manaNum'), costMark = $('costMark');
+const bar = $('bar'), bn = $('banner');
+const hpFill = $('hpFill'), hpNum = $('hpNum');
 const waveNum = $('waveNum'), scoreNum = $('scoreNum');
-const slots = [], costEls = [];
-
-TYPES.forEach((t, i) => {
-  const b = document.createElement('button');
-  b.type = 'button'; b.className = 'slot'; b.title = t.note;
-  b.innerHTML = '<span class="dot" style="background:var(--' + t.key + ')"></span>' +
-    '<span class="nm"><kbd>' + (i + 1) + '</kbd>' + t.name + '</span><span class="cost" id="cost' + i + '">' + t.cost + '</span>' +
-    '<span class="note">' + t.note + '</span>';
-  b.addEventListener('click', () => { select(i); b.blur(); });
-  bar.appendChild(b); slots.push(b); costEls.push($('cost' + i));
+const cells = {};
+TYPES.forEach(t => {
+  const d = document.createElement('div');
+  d.className = 'pc off';
+  d.innerHTML = '<span class="dot" style="background:var(--' + t.key + ')"></span><span class="nm">' + (t.short || t.name) + '</span>' +
+    '<span class="st"><b id="pcn-' + t.key + '"></b><em id="pce-' + t.key + '"></em></span>';
+  bar.appendChild(d);
+  cells[t.key] = { el:d, n:$('pcn-' + t.key), e:$('pce-' + t.key) };
 });
-function isUnlocked(i){ return !!UNLOCKED[TYPES[i].key]; }
-function select(i){
-  i = (i + TYPES.length) % TYPES.length;
-  if (!isUnlocked(i)){
-    if (state === 'play') floatText(player.x, player.y, TYPES[i].name + ' ยังล็อกอยู่ ปลดล็อกในร้านค้าระหว่างเวฟ', P.hp, 74);
-    return;
-  }
-  selected = i;
-}
-function cycleSel(dir){
-  for (let k = 1; k <= TYPES.length; k++){
-    const i = (selected + dir * k + TYPES.length * 3) % TYPES.length;
-    if (isUnlocked(i)){ selected = i; return; }
-  }
-}
 
 function banner(txt){
   bn.textContent = txt; bn.classList.remove('show'); void bn.offsetWidth; bn.classList.add('show');
@@ -360,7 +377,7 @@ function showOverlay(mode){
   fine.hidden = mode !== 'title';
   if (mode === 'title'){
     ovTitle.textContent = 'Summoner';
-    ovSub.textContent = 'คุณไม่มีอาวุธติดตัว แต่เรียกวิญญาณมาสู้แทนได้';
+    ovSub.textContent = 'คุณไม่มีอาวุธ แต่มีลูกน้องวิญญาณเดินตามและสู้แทนคุณ';
     goBtn.textContent = 'เริ่มเกม';
   } else if (mode === 'pause'){
     ovTitle.textContent = 'หยุดชั่วคราว';
@@ -379,7 +396,6 @@ function hideOverlay(){ ov.classList.add('hide'); goBtn.blur(); }
 function startGame(){
   resetWorld();
   best = loadBest();
-  select(0);
   state = 'play'; paused = false; newBest = false;
   shopEl.classList.add('hide');
   hideOverlay();
@@ -404,49 +420,137 @@ goBtn.addEventListener('click', () => {
 
 /* ---------- upgrades & shop ---------- */
 const shopEl = $('shop'), cardsEl = $('cards'), nextBtn = $('nextBtn'), shopSouls = $('shopSouls'), shopTitle = $('shopTitle'), soulNum = $('soulNum');
-const mult = l => 1 + 0.5 * l;               /* every level adds +50% of the base value */
+const perkEl = $('perk'), pcardsEl = $('pcards'), rerollBtn = $('rerollBtn'), rerollNum = $('rerollNum');
+const bossBar = $('bossBar'), bossFill = $('bossFill'), bossName = $('bossName');
+const mult = l => Math.pow(1.5, l);          /* every level multiplies the current value by 1.5 */
 const lv = k => UPG[k] || 0;
 const n1 = v => +v.toFixed(1);
-const TI = TYPES[0], TA = TYPES[1], TG = TYPES[2];
+const TI = TYPE_BY_KEY.imp, TM = TYPE_BY_KEY.mage, TG = TYPE_BY_KEY.golem, TH = TYPE_BY_KEY.healer;
 const GROUPS = [
   { id:'me', name:'ตัวคุณ', color:'--ink', items:[
-    { key:'hp',    name:'เลือดสูงสุด', base:4, fmt:l => Math.round(100 * mult(l)) },
-    { key:'mana',  name:'มานาสูงสุด',  base:4, fmt:l => Math.round(100 * mult(l)) },
-    { key:'regen', name:'ฟื้นมานา',    base:5, fmt:l => n1(7 * mult(l)) + ' ต่อวิ' } ] },
+    { key:'hp', name:'เลือดสูงสุด', base:4, fmt:l => Math.round(100 * mult(l)) } ] },
   { id:'imp', name:'อิมพ์', color:'--imp', items:[
-    { key:'imp_dmg',  name:'ดาเมจ',         base:4, fmt:l => n1(TI.dmg * mult(l)) },
-    { key:'imp_spd',  name:'ความเร็วโจมตี',  base:5, fmt:l => n1(mult(l) / TI.cd) + ' ครั้ง/วิ' },
-    { key:'imp_cost', name:'ค่ามานาเรียก',   base:5, fmt:l => Math.max(1, Math.round(TI.cost / mult(l))) + ' มานา' } ] },
-  { id:'archer', name:'ผีธนู', color:'--archer', unlockCost:12, note:'ยิงจากระยะไกล ลูกธนูเบาแต่ปลอดภัย', items:[
-    { key:'arc_dmg',   name:'ดาเมจ',          base:5, fmt:l => n1(TA.dmg * mult(l)) },
-    { key:'arc_multi', name:'ลูกธนูต่อครั้ง',  base:8, max:5, fmt:l => (1 + l) + ' ลูก' },
-    { key:'arc_cost',  name:'ค่ามานาเรียก',    base:6, fmt:l => Math.max(1, Math.round(TA.cost / mult(l))) + ' มานา' } ] },
+    { key:'imp_dmg', name:'ดาเมจ',          base:4, fmt:l => n1(TI.dmg * mult(l)) },
+    { key:'imp_spd', name:'ความเร็วโจมตี',   base:5, fmt:l => n1(mult(l) / TI.cd) + ' ครั้ง/วิ' },
+    { key:'imp_n',   name:'เพิ่มอิมพ์ +1 ตัว', base:6, fmt:l => (1 + l) + ' ตัว' } ] },
+  { id:'mage', name:'นักเวทกระดูก', color:'--mage', items:[
+    { key:'mage_dmg', name:'ดาเมจลำแสง',          base:5, fmt:l => n1(TM.dmg * mult(l)) },
+    { key:'mage_spd', name:'ความเร็วยิง',          base:6, fmt:l => n1(mult(l) / TM.cd) + ' นัด/วิ' },
+    { key:'mage_n',   name:'เพิ่มนักเวท +1 ตัว',   base:8, fmt:l => (1 + l) + ' ตัว' } ] },
   { id:'golem', name:'โกเลม', color:'--golem', unlockCost:28, note:'อึด ตีแรง ระเบิดโดนศัตรูรอบๆ เป้า', items:[
-    { key:'gol_dmg',  name:'ดาเมจ',         base:6, fmt:l => n1(TG.dmg * mult(l)) },
-    { key:'gol_aoe',  name:'ระยะระเบิด',     base:5, fmt:l => Math.round(TG.splash * mult(l)) },
-    { key:'gol_cost', name:'ค่ามานาเรียก',   base:6, fmt:l => Math.max(1, Math.round(TG.cost / mult(l))) + ' มานา' } ] }
+    { key:'gol_dmg', name:'ดาเมจ',            base:6,  fmt:l => n1(TG.dmg * mult(l)) },
+    { key:'gol_aoe', name:'ระยะระเบิด',        base:5,  fmt:l => Math.round(TG.splash * mult(l)) },
+    { key:'gol_n',   name:'เพิ่มโกเลม +1 ตัว', base:10, fmt:l => (1 + l) + ' ตัว' } ] },
+  { id:'healer', name:'ฮีลเลอร์', color:'--healer', unlockCost:18, note:'คอยรักษาเลือดคุณและเพื่อนร่วมทีมที่เจ็บหนักที่สุด', items:[
+    { key:'heal_pow', name:'พลังรักษา',            base:5, fmt:l => n1(TH.heal * mult(l)) + ' ต่อครั้ง' },
+    { key:'heal_spd', name:'ความเร็วรักษา',         base:6, fmt:l => n1(mult(l) / TH.cd) + ' ครั้ง/วิ' },
+    { key:'heal_n',   name:'เพิ่มฮีลเลอร์ +1 ตัว',  base:8, fmt:l => (1 + l) + ' ตัว' } ] }
 ];
 const ITEM = {};
 GROUPS.forEach(g => g.items.forEach(it => { ITEM[it.key] = it; }));
 const upCost = (u, l) => u.base * Math.pow(2, l);   /* price doubles every level */
 
-/* live stats of a summon type, with all of its upgrades applied */
+/* live stats of a follower type with every upgrade applied */
 function statsOf(t){
-  const k = t.key, pre = k === 'imp' ? 'imp' : k === 'archer' ? 'arc' : 'gol';
-  const cost = Math.max(1, Math.round(t.cost / mult(lv(pre + '_cost'))));
-  const dmg = t.dmg * mult(lv(pre + '_dmg'));
-  if (k === 'imp') return { dmg, cd:t.cd / mult(lv('imp_spd')), cost, splash:0, shots:1 };
-  if (k === 'archer') return { dmg, cd:t.cd, cost, splash:0, shots:1 + lv('arc_multi') };
-  return { dmg, cd:t.cd, cost, splash:t.splash * mult(lv('gol_aoe')), shots:1 };
+  const k = t.key;
+  if (k === 'imp') return { dmg:t.dmg * mult(lv('imp_dmg')), cd:t.cd / mult(lv('imp_spd')), splash:0, shots:1, heal:0 };
+  if (k === 'mage') return { dmg:t.dmg * mult(lv('mage_dmg')), cd:t.cd / mult(lv('mage_spd')), splash:0, heal:0 };
+  if (k === 'golem') return { dmg:t.dmg * mult(lv('gol_dmg')), cd:t.cd, splash:t.splash * mult(lv('gol_aoe')), shots:1, heal:0 };
+  return { dmg:0, cd:t.cd / mult(lv('heal_spd')), splash:0, shots:1, heal:t.heal * mult(lv('heal_pow')) };
 }
-const costOf = t => statsOf(t).cost;
+const COUNT_KEY = { imp:'imp_n', mage:'mage_n', golem:'gol_n', healer:'heal_n' };
+function countOf(key){
+  if (!UNLOCKED[key]) return 0;
+  return 1 + lv(COUNT_KEY[key]);
+}
+/* squad slots: one per follower. A slot holds the live monster, or a respawn countdown while it is dead */
+function syncSquad(){
+  for (const t of TYPES){
+    let have = 0;
+    for (const s of squad) if (s.key === t.key) have++;
+    for (let i = have; i < countOf(t.key); i++) squad.push({ key:t.key, idx:i, m:null, cd:0.15 + i * 0.12 });
+  }
+}
+function spawnMinion(s){
+  const t = TYPE_BY_KEY[s.key], a = Math.random() * TAU;
+  const m = {
+    id:uid++, type:t, x:clamp(player.x + Math.cos(a) * 40, t.r, WORLD.w - t.r), y:clamp(player.y + Math.sin(a) * 40, t.r, WORLD.h - t.r),
+    r:t.r, hp:t.hp, maxHp:t.hp, cd:0.4, flash:0, pulse:0, think:0, tgt:null, face:a, dead:false, born:1, s,
+    dashCd:1, dashT:0, dashHit:false, combo:0, comboT:9, leapCd:2, leap:null, air:0, pullCd:3, shieldCd:2, shield:0, shieldT:0, shieldHit:0
+  };
+  s.m = m; minions.push(m);
+  ringFx(m.x, m.y, t.r + 30, P[t.key], 3);
+  burst(m.x, m.y, P[t.key], 10);
+}
 function applyUpgrades(){
-  MAXMANA = Math.round(100 * mult(lv('mana')));
-  MANA_REGEN = 7 * mult(lv('regen'));
   const oldMax = player.maxHp;
   player.maxHp = Math.round(100 * mult(lv('hp')));
   if (player.maxHp > oldMax) player.hp += player.maxHp - oldMax;
 }
+/* ---------- special buff cards (every 3 waves) ---------- */
+const pk = k => PERK[k] || 0;
+/* numbers of every card at level L (L = 1, 2, 3 ...) */
+const PN = {
+  dashRange: L => 200 + 40 * (L - 1),   dashCd: L => 4 / (1 + 0.3 * (L - 1)),   dashMult: L => 1.5 + 0.25 * (L - 1),
+  comboHits: L => 2 + L,                comboMult: L => 2 + 0.5 * (L - 1),
+  pierce: L => L,                       forks: L => L + 1,                       forkPct: L => Math.min(1, 0.5 + 0.1 * (L - 1)),
+  pullR: L => 170 + 30 * (L - 1),       pullCd: L => 9 / (1 + 0.2 * (L - 1)),
+  leapCd: L => 6 / (1 + 0.2 * (L - 1)), leapMult: L => 1.5 + 0.25 * (L - 1),
+  aoeR: L => 110 + 25 * (L - 1),        aoePct: L => Math.min(1, 0.6 + 0.1 * (L - 1)),
+  shieldN: L => L,                      shieldAmt: L => 25 + 10 * (L - 1),       shieldCd: L => 6 / (1 + 0.15 * (L - 1))
+};
+const PERKS = [
+  { key:'imp_dash',    mon:'imp',    name:'พุ่งโจมตี',   fmt:L => 'พุ่งเข้าใส่ศัตรูที่อยู่ไกลถึง ' + PN.dashRange(L) + ' หน่วย ทุก ' + n1(PN.dashCd(L)) + ' วิ ดาเมจพุ่ง x' + n1(PN.dashMult(L)) },
+  { key:'imp_combo',   mon:'imp',    name:'คอมโบรัว',    fmt:L => 'ตีต่อเนื่องเป็นคอมโบ ' + PN.comboHits(L) + ' ครั้ง ครั้งสุดท้ายแรง x' + n1(PN.comboMult(L)) },
+  { key:'mage_pierce', mon:'mage',   name:'ลำแสงทะลุ',    fmt:L => 'ลำแสงทะลุศัตรูได้ ' + (PN.pierce(L) + 1) + ' ตัวในแนวเดียวกัน' },
+  { key:'mage_fork',   mon:'mage',   name:'ลำแสงแตกตัว',  fmt:L => 'โดนศัตรูแล้วแตกลำแสงออกไปด้านหลังตัวศัตรูเป็นรูปตัววี ' + PN.forks(L) + ' ลำ (เล็งหาศัตรูที่อยู่ด้านหลังเอง) ลำละ ' + Math.round(PN.forkPct(L) * 100) + '% ของดาเมจ' },
+  { key:'gol_pull',    mon:'golem',  name:'หลุมดูด',      fmt:L => 'ดูดศัตรูในรัศมี ' + PN.pullR(L) + ' เข้าหาตัว ทุก ' + n1(PN.pullCd(L)) + ' วิ' },
+  { key:'gol_leap',    mon:'golem',  name:'กระโดดทับ',    fmt:L => 'กระโดดทับศัตรูที่อยู่ไกลถึง 330 หน่วย ดาเมจ x' + n1(PN.leapMult(L)) + ' ทุก ' + n1(PN.leapCd(L)) + ' วิ' },
+  { key:'heal_aoe',    mon:'healer', name:'ฮีลวงกว้าง',   fmt:L => 'รักษาทุกคนรอบเป้าหมาย รัศมี ' + PN.aoeR(L) + ' ได้ ' + Math.round(PN.aoePct(L) * 100) + '% ของพลังรักษา' },
+  { key:'heal_shield', mon:'healer', name:'ร่ายโล่',      fmt:L => 'ร่ายโล่ให้ ' + PN.shieldN(L) + ' ตัว กันดาเมจ ' + PN.shieldAmt(L) + ' ทุก ' + n1(PN.shieldCd(L)) + ' วิ' }
+];
+const PERK_BY_KEY = {};
+PERKS.forEach(p => { PERK_BY_KEY[p.key] = p; });
+const shuffled = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+/* three different cards; cards for followers you have not unlocked yet are only used to fill the gaps */
+function drawCards(){
+  const shown = cards.map(c => c.key);
+  const ok = PERKS.filter(p => UNLOCKED[p.mon]), later = PERKS.filter(p => !UNLOCKED[p.mon]);
+  const pool = shuffled(ok.filter(p => !shown.includes(p.key))).concat(shuffled(ok.filter(p => shown.includes(p.key)))).concat(shuffled(later));
+  return pool.slice(0, 3).map(p => ({ key:p.key, locked:!UNLOCKED[p.mon] }));
+}
+function renderPerks(){
+  rerollNum.textContent = rerolls; rerollBtn.disabled = rerolls <= 0;
+  pcardsEl.innerHTML = '';
+  cards.forEach((c, i) => {
+    const p = PERK_BY_KEY[c.key], L = pk(c.key), mon = TYPE_BY_KEY[p.mon];
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'pk' + (L ? '' : ' new') + (c.locked ? ' warn' : '');
+    b.innerHTML = '<i class="pd" style="background:var(--' + mon.key + ')"></i><span class="pb"><span class="pt">' + p.name + '<em class="pl">' + (L ? 'ระดับ ' + L + ' → ' + (L + 1) : 'ใหม่') + '</em></span>' +
+      '<span class="px">' + p.fmt(L + 1) + '</span><span class="pm">' + mon.name + (c.locked ? ' · ยังไม่ปลดล็อก จะใช้ได้เมื่อปลดล็อกในร้านค้า' : '') + '</span></span>';
+    b.addEventListener('click', () => choosePerk(i));
+    pcardsEl.appendChild(b);
+  });
+}
+function openPerks(){
+  inShop = true; perkOpen = true; keys.clear();
+  stick.active = false; stick.id = -1; stick.dx = stick.dy = 0;
+  rerolls = REROLLS; cards = []; cards = drawCards();
+  renderPerks();
+  perkEl.classList.remove('hide');
+}
+function choosePerk(i){
+  const c = cards[i]; if (!c || !perkOpen) return;
+  PERK[c.key] = pk(c.key) + 1;
+  perkOpen = false; perkEl.classList.add('hide');
+  openShop();
+}
+function rerollPerks(){
+  if (!perkOpen || rerolls <= 0) return;
+  rerolls--; cards = drawCards(); renderPerks();
+}
+rerollBtn.addEventListener('click', rerollPerks);
+
 function renderShop(){
   const st = cardsEl.scrollTop;
   shopSouls.textContent = souls;
@@ -485,7 +589,6 @@ function buyUpgrade(key){
   if ((u.max !== undefined && l >= u.max) || souls < cost) return;
   souls -= cost; UPG[key] = l + 1;
   applyUpgrades();
-  if (key === 'mana') mana = Math.min(MAXMANA, mana + 50);
   renderShop();
 }
 function unlockType(id){
@@ -503,7 +606,7 @@ function openShop(){
   nextBtn.focus({ preventScroll:true });
 }
 function closeShop(){
-  if (!inShop) return;
+  if (!inShop || perkOpen) return;
   inShop = false;
   shopEl.classList.add('hide');
   nextBtn.blur();
@@ -512,38 +615,43 @@ function closeShop(){
 nextBtn.addEventListener('click', closeShop);
 
 function spawnOrbs(e){
-  const n = FOES[e.kind].soul;
+  let n = FOES[e.kind].soul, v = 1;
+  if (n > 8){ v = n / 10; n = 10; }          /* a boss drops 10 big souls instead of 30 small ones */
   for (let i = 0; i < n; i++){
     const a = Math.random() * TAU, sp = rand(60, 150);
-    orbs.push({ x:e.x, y:e.y, vx:Math.cos(a) * sp, vy:Math.sin(a) * sp * 0.7, v:1, t:0, mag:false, sp:140, ph:Math.random() * TAU, dead:false });
+    orbs.push({ x:e.x, y:e.y, vx:Math.cos(a) * sp, vy:Math.sin(a) * sp * 0.7, v, t:0, mag:false, sp:140, ph:Math.random() * TAU, dead:false });
   }
   while (orbs.length > 150){ souls += orbs.shift().v; }
 }
 
 /* ---------- waves ---------- */
 function startWave(n){
-  wave = n; clearing = false;
-  const count = 6 + Math.floor(n * 3.2);
+  wave = n; clearing = false; cleanupT = 0;
+  const late = lateOf(n), boss = n % BOSS_EVERY === 0;
+  const count = 6 + Math.floor(n * 3.2) + late * 2;
+  const total = boss ? Math.floor(count * 0.6) : count;
   queue = [];
-  for (let i = 0; i < count; i++){
+  for (let i = 0; i < total; i++){
     const r = Math.random(); let k = 'grunt';
-    if (n >= 4 && r < 0.15) k = 'spitter';
-    else if (n >= 3 && r < 0.15 + Math.min(0.25, 0.1 + n * 0.012)) k = 'brute';
+    if (n >= 4 && r < 0.15 + late * 0.01) k = 'spitter';
+    else if (n >= 3 && r < 0.15 + late * 0.01 + Math.min(0.35, 0.1 + n * 0.012 + late * 0.01)) k = 'brute';
     else if (n >= 2 && r < 0.55) k = 'runner';
     queue.push(k);
   }
+  if (boss) queue.push('boss');            /* pops first */
   spawnT = 0.8;
-  banner('เวฟ ' + n);
+  banner(boss ? 'เวฟ ' + n + ' · บอส!' : 'เวฟ ' + n);
 }
-function spawnEnemy(kind){
-  const t = FOES[kind], sc = 1 + (wave - 1) * 0.09;
+function spawnEnemy(kind, ax, ay){
+  const t = FOES[kind], sc = hpScale(wave) * (t.boss ? 1 + bossIdx * 0.4 : 1);
   const ang = Math.random() * TAU, d = Math.hypot(W / Z, H / (Z * TILT)) / 2 + 60;
-  const x = clamp(player.x + Math.cos(ang) * d, 24, WORLD.w - 24);
-  const y = clamp(player.y + Math.sin(ang) * d, 24, WORLD.h - 24);
+  const x = ax === undefined ? clamp(player.x + Math.cos(ang) * d, 24, WORLD.w - 24) : clamp(ax, t.r, WORLD.w - t.r);
+  const y = ay === undefined ? clamp(player.y + Math.sin(ang) * d, 24, WORLD.h - 24) : clamp(ay, t.r, WORLD.h - t.r);
   enemies.push({
-    id:uid++, kind, x, y, r:t.r, hp:t.hp * sc, maxHp:t.hp * sc, speed:t.speed * (1 + (wave - 1) * 0.015),
-    dmg:t.dmg, score:t.score, mana:t.mana, flash:0, atk:0, shoot:1 + Math.random() * 1.5,
-    tgt:null, retarget:0, face:0, dead:false, spawnT:0.5
+    id:uid++, kind, x, y, r:t.r, hp:t.hp * sc, maxHp:t.hp * sc, speed:t.speed * spdScale(wave),
+    dmg:t.dmg * dmgScale(wave), score:t.score, flash:0, atk:0, shoot:1 + Math.random() * 1.5,
+    tgt:null, retarget:0, face:0, dead:false, spawnT:0.5, pull:0, pullBy:null,
+    boss:!!t.boss, bs:'walk', bt:2.5, bn:0, ts:0, tele:null, cdir:0, chit:[]
   });
 }
 
@@ -563,19 +671,122 @@ function hurtEnemy(e, d){
   floatText(e.x, e.y, Math.round(d), P.lantern, e.r * 2.5 + 8);
   if (e.hp <= 0){
     e.dead = true; score += e.score; kills++;
-    mana = Math.min(MAXMANA, mana + e.mana);
+    if (e.boss){ bossIdx++; banner('ปราบบอสแล้ว!'); shake = 14; ringFx(e.x, e.y, 260, P.lantern, 6); burst(e.x, e.y, P.lantern, 30); }
     burst(e.x, e.y, e.kind === 'brute' ? P.foe2 : P.foe, e.kind === 'brute' ? 18 : 10);
     spawnOrbs(e);
   }
 }
-function hurtMinion(m, d){ m.hp -= d; m.flash = 0.1; }
+/* a shield soaks damage before hp does */
+function absorb(a, d){
+  if (a.shield > 0){ const x = Math.min(a.shield, d); a.shield -= x; d -= x; a.shieldHit = 0.2; if (a.shield <= 0.01){ a.shield = 0; a.shieldT = 0; } }
+  return d;
+}
+function hurtMinion(m, d){
+  d = absorb(m, d);
+  if (d <= 0) return;
+  m.hp -= d; m.flash = 0.1;
+}
 function hurtPlayer(d, nx, ny){
   if (player.inv > 0) return;
+  d = absorb(player, d);
+  if (d <= 0){ player.inv = 0.35; burst(player.x, player.y, P.healer, 5); return; }
   player.hp -= d; player.inv = 0.8; dmgFlash = 0.35; shake = Math.max(shake, 9);
   player.x = clamp(player.x + nx * 20, player.r, WORLD.w - player.r);
   player.y = clamp(player.y + ny * 20, player.r, WORLD.h - player.r);
   burst(player.x, player.y, P.hp, 8);
   if (player.hp <= 0){ player.hp = 0; gameOver(); }
+}
+function hitAllies(x, y, R, dmg){
+  for (const m of minions){
+    if (!m.dead && Math.hypot(m.x - x, m.y - y) < R + m.r){ hurtMinion(m, dmg); burst(m.x, m.y, P.foe2, 5); }
+  }
+  const pd = Math.hypot(player.x - x, player.y - y);
+  if (pd < R + player.r) hurtPlayer(dmg, (player.x - x) / (pd || 1), (player.y - y) / (pd || 1));
+}
+/* the boss cycles slam -> summon -> charge, every attack is telegraphed on the floor first */
+const BOSS_CYCLE = ['slam', 'summon', 'charge'];
+function bossAI(e, dt, t, dx, dy, d){
+  e.bt -= dt;
+  if (e.bs === 'walk'){
+    e.face = Math.atan2(dy, dx);
+    e.x = clamp(e.x + dx / d * e.speed * dt, e.r, WORLD.w - e.r); e.y = clamp(e.y + dy / d * e.speed * dt, e.r, WORLD.h - e.r);
+    if (e.bt <= 0){
+      const nx = BOSS_CYCLE[e.bn++ % BOSS_CYCLE.length];
+      e.bs = nx; e.ts = 0;
+      if (nx === 'slam') e.tele = { kind:'ring', r:215, t:0, dur:0.9 };
+      else if (nx === 'charge'){ e.cdir = Math.atan2(dy, dx); e.chit = []; e.tele = { kind:'line', a:e.cdir, len:520, w:46, t:0, dur:0.8 }; }
+    }
+  } else if (e.bs === 'slam'){
+    e.ts += dt; e.tele.t = e.ts;
+    if (e.ts >= e.tele.dur){
+      const R = e.tele.r;
+      ringFx(e.x, e.y, R, P.foe2, 6); shake = Math.max(shake, 12); burst(e.x, e.y, P.foe2, 22);
+      hitAllies(e.x, e.y, R, e.dmg * 1.1);
+      e.tele = null; e.bs = 'walk'; e.bt = Math.max(2.2, 3.4 - bossIdx * 0.3);
+    }
+  } else if (e.bs === 'summon'){
+    e.ts += dt;
+    if (e.ts >= 0.8){
+      const n = 3 + Math.floor(wave / 10) + bossIdx;
+      for (let i = 0; i < n; i++){
+        const a = i / n * TAU + Math.random(), kind = (wave >= 20 && i % 3 === 0) ? 'brute' : (i % 2 ? 'runner' : 'grunt');
+        spawnEnemy(kind, e.x + Math.cos(a) * (e.r + 40), e.y + Math.sin(a) * (e.r + 40));
+      }
+      ringFx(e.x, e.y, 170, P.foe, 4); burst(e.x, e.y, P.foe, 14);
+      e.bs = 'walk'; e.bt = Math.max(3, 5 - bossIdx * 0.4);
+    }
+  } else if (e.bs === 'charge'){
+    e.ts += dt; e.face = e.cdir;
+    if (e.ts < 0.8){ e.tele.t = e.ts; }
+    else if (e.ts < 1.35){
+      e.tele = null;
+      e.x = clamp(e.x + Math.cos(e.cdir) * 520 * dt, e.r, WORLD.w - e.r); e.y = clamp(e.y + Math.sin(e.cdir) * 520 * dt, e.r, WORLD.h - e.r);
+      const dmg = e.dmg * 1.3;
+      for (const m of minions){
+        if (!m.dead && !e.chit.includes(m.id) && Math.hypot(m.x - e.x, m.y - e.y) < e.r + m.r){ e.chit.push(m.id); hurtMinion(m, dmg); burst(m.x, m.y, P.foe2, 6); }
+      }
+      if (!e.chit.includes('p') && Math.hypot(player.x - e.x, player.y - e.y) < e.r + player.r){ e.chit.push('p'); hurtPlayer(dmg, Math.cos(e.cdir), Math.sin(e.cdir)); }
+      if (Math.random() < 0.7) burst(e.x, e.y, P.foe2, 2);
+    } else { e.bs = 'walk'; e.bt = Math.max(2.5, 4 - bossIdx * 0.3); }
+  }
+}
+/* hit-scan laser: one instant shot along a straight line. Everything on the line is hit (up to maxHits).
+   The beam then stays on screen and fades away like an afterimage. */
+function rayHits(x, y, ang, len, ignore){
+  const cx = Math.cos(ang), cy = Math.sin(ang), out = [];
+  for (const e of enemies){
+    if (e.dead || e.spawnT > 0 || (ignore && ignore.includes(e.id))) continue;
+    const dx = e.x - x, dy = e.y - y, t = dx * cx + dy * cy;
+    if (t < 0 || t > len + e.r) continue;
+    if (Math.abs(dx * cy - dy * cx) <= e.r + 5) out.push({ e, t });
+  }
+  out.sort((a, b) => a.t - b.t);
+  return out;
+}
+const angDiff = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+function fireBeam(x, y, h1, ang, len, dmg, maxHits, forks, forkPct, ignore, w){
+  const hits = rayHits(x, y, ang, len, ignore).slice(0, maxHits);
+  const last = hits.length ? hits[hits.length - 1] : null;
+  const endT = last ? last.t : len;                    /* a miss still draws the whole line */
+  beams.push({ x1:x, y1:y, h1, x2:x + Math.cos(ang) * endT, y2:y + Math.sin(ang) * endT, h2:last ? last.e.r * 1.1 : h1 * 0.6, t:0, max:0.55, w });
+  const ids = (ignore || []).concat(hits.map(h => h.e.id));
+  for (const h of hits){
+    hurtEnemy(h.e, dmg); burst(h.e.x, h.e.y, P.mage, 4);
+    if (forks <= 0) continue;
+    /* the beam splits at the enemy and the forks continue past it, out of the monster's back, spread like a V.
+       Each fork locks onto the nearest enemy on that far side; with nobody there it takes a fixed V direction. */
+    ringFx(h.e.x, h.e.y, h.e.r + 22, P.mage, 3);
+    const away = ang;                       /* the side of the enemy that faces away from the mage */
+    const near = enemies.filter(o => !o.dead && o.spawnT <= 0 && !ids.includes(o.id))
+      .map(o => ({ d:Math.hypot(o.x - h.e.x, o.y - h.e.y), a:Math.atan2(o.y - h.e.y, o.x - h.e.x) }))
+      .filter(c => c.d < 240 && Math.abs(angDiff(c.a, away)) < 1.6)
+      .sort((p, q) => p.d - q.d);
+    for (let i = 0; i < forks; i++){
+      const off = (i % 2 ? 1 : -1) * (0.5 + 0.45 * Math.floor(i / 2));
+      const a = near[i] ? near[i].a : away + off;
+      fireBeam(h.e.x, h.e.y, h.e.r * 1.1, a, 240, dmg * forkPct, 1, 0, 0, ids, 0.8);
+    }
+  }
 }
 
 /* ---------- targeting ---------- */
@@ -588,31 +799,29 @@ function nearestEnemy(x, y, maxD){
   }
   return best;
 }
-const toWorld = (sx, sy) => ({ x:sx / Z + cam.x, y:sy / (Z * TILT) + cam.y });
-
-/* ---------- summoning ---------- */
-function summonAt(wx, wy, sx, sy){
-  if (state !== 'play' || paused || summonCd > 0) return;
-  const t = TYPES[selected];
-  if (minions.length >= MAX_MINIONS){ floatText(player.x, player.y, 'เรียกได้สูงสุด ' + MAX_MINIONS + ' ตัว', P.hp, 70); return; }
-  if (mana < costOf(t)){
-    floatText(player.x, player.y, 'มานาไม่พอ', P.hp, 70);
-    manaBox.classList.remove('shake'); void manaBox.offsetWidth; manaBox.classList.add('shake');
-    return;
+/* melee followers only go for enemies that come close to the player; the nearest one to them wins */
+function guardTarget(m, aggro){
+  let best = null, bd = 1e12;
+  for (const e of enemies){
+    if (e.dead || e.spawnT > 0) continue;
+    if (Math.hypot(e.x - player.x, e.y - player.y) > aggro) continue;
+    const dx = e.x - m.x, dy = e.y - m.y, d = dx * dx + dy * dy;
+    if (d < bd){ bd = d; best = e; }
   }
-  const dx = wx - player.x, dy = wy - player.y, d = Math.hypot(dx, dy);
-  let px = wx, py = wy;
-  if (d > SUMMON_RANGE){ px = player.x + dx / d * SUMMON_RANGE; py = player.y + dy / d * SUMMON_RANGE; }
-  px = clamp(px, t.r, WORLD.w - t.r); py = clamp(py, t.r, WORLD.h - t.r);
-  mana -= costOf(t); summonCd = 0.16;
-  const forced = enemyAtScreen(sx, sy);
-  minions.push({
-    id:uid++, type:t, x:px, y:py, r:t.r, hp:t.hp, maxHp:t.hp, life:t.life, maxLife:t.life,
-    cd:0.25, flash:0, pulse:0, think:0, tgt:null, forced, slot:Math.random() * TAU, face:0, dead:false
-  });
-  ringFx(px, py, t.r + 34, P[t.key], 3);
-  burst(px, py, P[t.key], 12);
+  return best;
 }
+/* the healer picks the most wounded ally (the player counts too) inside its reach */
+function healTarget(m, reach){
+  let best = null, ratio = 0.999;
+  const cand = [player].concat(minions);
+  for (const a of cand){
+    if (a.dead) continue;
+    const q = a.hp / a.maxHp;
+    if (q < ratio && Math.hypot(a.x - m.x, a.y - m.y) <= reach){ ratio = q; best = a; }
+  }
+  return best;
+}
+const toWorld = (sx, sy) => ({ x:sx / Z + cam.x, y:sy / (Z * TILT) + cam.y });
 
 /* ---------- update ---------- */
 function update(dt){
@@ -632,23 +841,22 @@ function update(dt){
   if (moving) player.face = Math.atan2(iy, ix);
   player.bob += dt * (moving ? 11 : 2.5);
   player.inv = Math.max(0, player.inv - dt);
-  mana = Math.min(MAXMANA, mana + MANA_REGEN * dt);
-  summonCd -= dt;
+  if (player.shieldT > 0){ player.shieldT -= dt; if (player.shieldT <= 0) player.shield = 0; }
+  if (player.shieldHit > 0) player.shieldHit -= dt;
   shake = Math.max(0, shake - dt * 30);
   dmgFlash = Math.max(0, dmgFlash - dt);
 
   /* wave flow */
   if (queue.length){
     spawnT -= dt;
-    if (spawnT <= 0 && enemies.length < 40){
+    if (spawnT <= 0 && enemies.length < Math.min(80, 40 + lateOf(wave) * 3)){
       spawnEnemy(queue.pop());
-      spawnT = Math.max(0.16, 0.55 - wave * 0.03);
+      spawnT = Math.max(0.11, 0.55 - wave * 0.03);
     }
   } else if (!clearing && enemies.length === 0){
     clearing = true; breakT = 1.2;
     score += wave * 50;
     player.hp = Math.min(player.maxHp, player.hp + 12);
-    mana = Math.min(MAXMANA, mana + 25);
     banner('เวฟ ' + wave + ' ผ่านแล้ว');
   }
   if (clearing){
@@ -656,9 +864,13 @@ function update(dt){
     if (breakT <= 0 && (orbs.length === 0 || breakT < -2.5)){
       for (const o of orbs) souls += o.v;
       orbs = [];
-      openShop();
+      if (wave % PERK_EVERY === 0) openPerks(); else openShop();
     }
   }
+
+  /* when only a few enemies are left for a while they stop kiting, so a wave can never stall */
+  if (!queue.length && enemies.length > 0 && enemies.length <= 4) cleanupT += dt; else cleanupT = 0;
+  const hunt = cleanupT > 12;
 
   /* enemies */
   for (const e of enemies){
@@ -679,18 +891,28 @@ function update(dt){
     if (e.tgt && (e.tgt.dead || e.tgt.hp <= 0)) e.tgt = null;
     const t = e.tgt || player;
     const dx = t.x - e.x, dy = t.y - e.y, d = Math.hypot(dx, dy) || 1;
-    e.face = Math.atan2(dy, dx);
-    let mv = 1;
-    if (def.ranged){
-      if (d < 230) mv = -0.8; else if (d < 300) mv = 0;
-      e.shoot -= dt;
-      if (d < 380 && e.shoot <= 0){
-        e.shoot = 2.1;
-        shots.push({ x:e.x, y:e.y, vx:dx / d * 230, vy:dy / d * 230, dmg:e.dmg, life:2.6, r:6, hostile:true });
+    if (e.boss){
+      bossAI(e, dt, t, dx, dy, d);
+    } else {
+      e.face = Math.atan2(dy, dx);
+      if (e.pull > 0){            /* sucked in by a golem */
+        e.pull -= dt;
+        const px = e.pullBy.x - e.x, py = e.pullBy.y - e.y, pd = Math.hypot(px, py) || 1;
+        if (pd > 34){ e.x = clamp(e.x + px / pd * 380 * dt, e.r, WORLD.w - e.r); e.y = clamp(e.y + py / pd * 380 * dt, e.r, WORLD.h - e.r); }
+      } else {
+        let mv = 1;
+        if (def.ranged){
+          if (!hunt){ if (d < 150) mv = -0.8; else if (d < 210) mv = 0; }   /* ranged enemies stop at 150-210; they close in when the wave is nearly over */
+          e.shoot -= dt;
+          if (d < 380 && e.shoot <= 0){
+            e.shoot = 2.1;
+            shots.push({ x:e.x, y:e.y, vx:dx / d * 230, vy:dy / d * 230, dmg:e.dmg, life:2.6, r:6, hostile:true });
+          }
+        }
+        e.x = clamp(e.x + dx / d * e.speed * mv * dt, e.r, WORLD.w - e.r);
+        e.y = clamp(e.y + dy / d * e.speed * mv * dt, e.r, WORLD.h - e.r);
       }
     }
-    e.x = clamp(e.x + dx / d * e.speed * mv * dt, e.r, WORLD.w - e.r);
-    e.y = clamp(e.y + dy / d * e.speed * mv * dt, e.r, WORLD.h - e.r);
     if (t !== player){
       if (d < e.r + t.r && e.atk <= 0){ e.atk = 0.7; hurtMinion(t, e.dmg); }
     }
@@ -709,57 +931,169 @@ function update(dt){
     }
   }
 
-  /* minions */
-  minions.forEach((m, idx) => {
-    const T_ = m.type, S = statsOf(T_);
-    m.life -= dt; m.cd -= dt; m.think -= dt;
+  /* squad: keep every slot filled; dead followers come back after their cooldown */
+  syncSquad();
+  for (const sl of squad){
+    if (!sl.m){ sl.cd -= dt; if (sl.cd <= 0) spawnMinion(sl); }
+  }
+
+  /* followers always walk with the player; melee ones only charge enemies that come close */
+  for (const m of minions){
+    if (m.dead) continue;
+    const T_ = m.type, S = statsOf(T_), role = T_.role, key = T_.key;
+    m.cd -= dt; m.think -= dt; m.born = Math.max(0, m.born - dt * 3);
+    m.dashCd -= dt; m.leapCd -= dt; m.pullCd -= dt; m.shieldCd -= dt; m.comboT += dt;
     m.flash = Math.max(0, m.flash - dt); m.pulse = Math.max(0, m.pulse - dt * 4);
-    if (m.life <= 0 || m.hp <= 0){ m.dead = true; burst(m.x, m.y, P[T_.key], 9); return; }
-    if (m.forced && m.forced.dead) m.forced = null;
-    if (m.think <= 0){ m.think = 0.2; m.tgt = m.forced || nearestEnemy(m.x, m.y, 520); }
-    if (m.tgt && m.tgt.dead) m.tgt = null;
-    let mx = 0, my = 0;
-    if (m.tgt){
+    if (m.shieldT > 0){ m.shieldT -= dt; if (m.shieldT <= 0) m.shield = 0; }
+    if (m.shieldHit > 0) m.shieldHit -= dt;
+    if (m.hp <= 0){
+      m.dead = true; m.s.m = null; m.s.cd = T_.respawn;
+      burst(m.x, m.y, P[T_.key], 10); ringFx(m.x, m.y, m.r + 22, P[T_.key], 3);
+      continue;
+    }
+
+    /* golem in mid-air: it only flies to the landing spot, then slams */
+    if (m.leap){
+      const Lp = m.leap; Lp.t += dt;
+      const k = Math.min(1, Lp.t / Lp.dur);
+      m.x = Lp.sx + (Lp.tx - Lp.sx) * k; m.y = Lp.sy + (Lp.ty - Lp.sy) * k; m.air = Math.sin(Math.PI * k) * 70;
+      if (k >= 1){
+        const R = S.splash * 1.1;
+        m.leap = null; m.air = 0; m.cd = 0.5;
+        ringFx(m.x, m.y, R, P.golem, 6); shake = Math.max(shake, 9); burst(m.x, m.y, P.golem, 14);
+        for (const e of enemies){
+          if (e.dead || e.spawnT > 0) continue;
+          if (Math.hypot(e.x - m.x, e.y - m.y) < R + e.r) hurtEnemy(e, S.dmg * PN.leapMult(pk('gol_leap')));
+        }
+      }
+      continue;
+    }
+
+    if (m.think <= 0){
+      m.think = 0.2;
+      m.tgt = role === 'melee' ? guardTarget(m, T_.aggro) : role === 'ranged' ? nearestEnemy(m.x, m.y, T_.reach) : healTarget(m, T_.reach);
+    }
+    if (m.tgt && (m.tgt.dead || (role === 'melee' && Math.hypot(m.tgt.x - player.x, m.tgt.y - player.y) > T_.aggro * 1.5))) m.tgt = null;
+
+    /* formation: every type stands on its own ring around the player */
+    const n = Math.max(1, countOf(T_.key));
+    const ang = m.s.idx / n * TAU + FORM[T_.key] + T * 0.25, rr = T_.ring + Math.max(0, n - 6) * 3;
+    const gx = player.x + Math.cos(ang) * rr, gy = player.y + Math.sin(ang) * rr;
+
+    let mx = 0, my = 0, spd = Math.max(T_.speed, 250);   /* following is quick so slow types keep up */
+    if (role === 'melee' && m.tgt){
       const dx = m.tgt.x - m.x, dy = m.tgt.y - m.y, d = Math.hypot(dx, dy) || 1;
-      m.face = Math.atan2(dy, dx);
-      if (T_.melee){
-        if (d > m.r + m.tgt.r + T_.reach){ mx = dx / d; my = dy / d; }
+      m.face = Math.atan2(dy, dx); spd = T_.speed;
+      const reachD = m.r + m.tgt.r + T_.reach;
+      let busy = false;
+      /* special moves from the buff cards */
+      if (key === 'imp' && pk('imp_dash') && m.dashT <= 0 && m.dashCd <= 0 && d > reachD + 30 && d < PN.dashRange(pk('imp_dash'))){
+        m.dashT = 0.3; m.dashCd = PN.dashCd(pk('imp_dash')); m.dashHit = true;
+        burst(m.x, m.y, P.imp, 6);
+      }
+      if (key === 'golem' && pk('gol_leap') && m.leapCd <= 0 && d > reachD + 40 && d < 330){
+        const f = (m.r + m.tgt.r) * 0.8 / d;
+        m.leap = { t:0, dur:0.55, sx:m.x, sy:m.y, tx:m.tgt.x - dx * f, ty:m.tgt.y - dy * f };
+        m.leapCd = PN.leapCd(pk('gol_leap')); ringFx(m.x, m.y, 50, P.golem, 3);
+        busy = true;
+      }
+      if (!busy && key === 'golem' && pk('gol_pull') && m.pullCd <= 0){
+        const R = PN.pullR(pk('gol_pull')); let any = false;
+        for (const e of enemies){
+          if (e.dead || e.spawnT > 0 || e.boss) continue;
+          const ed = Math.hypot(e.x - m.x, e.y - m.y);
+          if (ed < R && ed > 80){ e.pull = 0.6; e.pullBy = m; any = true; }
+        }
+        if (any){ m.pullCd = PN.pullCd(pk('gol_pull')); ringFx(m.x, m.y, R, P.golem, 5); burst(m.x, m.y, P.golem, 12); m.pulse = 1; }
+        else m.pullCd = 0.5;
+      }
+      if (!busy){
+        if (m.dashT > 0){
+          m.dashT -= dt; spd = 650;
+          parts.push({ x:m.x, y:m.y, vx:0, vy:0, life:0.3, max:0.3, col:P.imp, size:4 });
+          if (d <= reachD){ m.dashT = 0; m.cd = 0; }
+        }
+        if (d > reachD){ mx = dx / d; my = dy / d; }
         else if (m.cd <= 0){
-          m.cd = S.cd; m.pulse = 1;
+          m.pulse = 1;
+          let dmg = S.dmg, nextCd = S.cd;
+          if (m.dashHit){ dmg *= PN.dashMult(pk('imp_dash')); m.dashHit = false; shake = Math.max(shake, 3); }
+          if (key === 'imp' && pk('imp_combo')){
+            const Lc = pk('imp_combo');
+            if (m.comboT > 1.3) m.combo = 0;
+            m.combo++; m.comboT = 0;
+            if (m.combo >= PN.comboHits(Lc)){ dmg *= PN.comboMult(Lc); m.combo = 0; nextCd = S.cd * 1.4; burst(m.tgt.x, m.tgt.y, P.imp, 8); }
+            else nextCd = S.cd * 0.38;
+          }
+          m.cd = nextCd;
           if (T_.splash){
             ringFx(m.tgt.x, m.tgt.y, S.splash, P.golem, 4);
             shake = Math.max(shake, 4);
             for (const e of enemies){
               if (e.dead || e.spawnT > 0) continue;
-              if (e === m.tgt) hurtEnemy(e, S.dmg);
-              else if (Math.hypot(e.x - m.tgt.x, e.y - m.tgt.y) < S.splash + e.r) hurtEnemy(e, S.dmg * 0.6);
+              if (e === m.tgt) hurtEnemy(e, dmg);
+              else if (Math.hypot(e.x - m.tgt.x, e.y - m.tgt.y) < S.splash + e.r) hurtEnemy(e, dmg * 0.6);
             }
           } else {
-            hurtEnemy(m.tgt, S.dmg);
+            hurtEnemy(m.tgt, dmg);
             burst(m.tgt.x, m.tgt.y, P[T_.key], 4);
-          }
-        }
-      } else {
-        if (d > T_.reach * 0.9){ mx = dx / d; my = dy / d; }
-        else if (d < T_.reach * 0.45){ mx = -dx / d; my = -dy / d; }
-        if (d <= T_.reach && m.cd <= 0){
-          m.cd = S.cd; m.pulse = 1;
-          const base = Math.atan2(dy, dx);
-          for (let i = 0; i < S.shots; i++){
-            const a = base + (i - (S.shots - 1) / 2) * 0.17;
-            shots.push({ x:m.x, y:m.y, vx:Math.cos(a) * 430, vy:Math.sin(a) * 430, dmg:S.dmg, life:1.2, r:4, hostile:false });
           }
         }
       }
     } else {
-      const a = m.slot + T * 0.4, rr = 62 + (idx % 3) * 18;
-      const gx = player.x + Math.cos(a) * rr, gy = player.y + Math.sin(a) * rr;
       const dx = gx - m.x, dy = gy - m.y, d = Math.hypot(dx, dy);
-      if (d > 10){ mx = dx / d * Math.min(1, d / 60); my = dy / d * Math.min(1, d / 60); m.face = Math.atan2(dy, dx); }
+      if (d > 460){            /* fell far behind: hop back next to the player */
+        m.x = clamp(gx, m.r, WORLD.w - m.r); m.y = clamp(gy, m.r, WORLD.h - m.r);
+        ringFx(m.x, m.y, m.r + 22, P[T_.key], 3);
+      } else if (d > 8){
+        const k = Math.min(1, d / 50); mx = dx / d * k; my = dy / d * k;
+        if (!m.tgt) m.face = Math.atan2(dy, dx);
+      }
+      /* healer: cast shields on the weakest allies nearby */
+      if (role === 'healer' && pk('heal_shield') && m.shieldCd <= 0){
+        const Ls = pk('heal_shield'), amt = PN.shieldAmt(Ls);
+        const cand = [player].concat(minions).filter(o => !o.dead && !(o.shield > 1) && Math.hypot(o.x - m.x, o.y - m.y) <= T_.reach)
+          .sort((p, q) => p.hp / p.maxHp - q.hp / q.maxHp);
+        if (cand.length){
+          for (let i = 0; i < Math.min(PN.shieldN(Ls), cand.length); i++){
+            const o = cand[i]; o.shield = amt; o.shieldT = 7;
+            ringFx(o.x, o.y, (o.r || 15) + 20, P.healer, 3); floatText(o.x, o.y, 'โล่ ' + amt, P.healer, (o.r || 15) * 2.6 + 8);
+          }
+          m.shieldCd = PN.shieldCd(Ls); m.pulse = 1;
+        } else m.shieldCd = 0.6;
+      }
+      if (m.tgt && role !== 'melee'){
+        const tx = m.tgt.x - m.x, ty = m.tgt.y - m.y;
+        m.face = Math.atan2(ty, tx);
+        if (role === 'ranged' && m.cd <= 0){
+          m.cd = S.cd; m.pulse = 1;
+          const ang = Math.atan2(ty, tx), Lp = pk('mage_pierce'), Lf = pk('mage_fork');
+          fireBeam(m.x + Math.cos(ang) * 8, m.y + Math.sin(ang) * 8, m.r * 2.6, ang, T_.reach + 40, S.dmg,
+            1 + (Lp ? PN.pierce(Lp) : 0), Lf ? PN.forks(Lf) : 0, Lf ? PN.forkPct(Lf) : 0, null, 1);
+        } else if (role === 'healer' && m.cd <= 0){
+          const a = m.tgt;
+          a.hp = Math.min(a.maxHp, a.hp + S.heal);
+          m.cd = S.cd; m.pulse = 1; m.think = 0;
+          floatText(a.x, a.y, '+' + Math.round(S.heal), P.healer, (a.r || 15) * 2.5 + 8);
+          ringFx(a.x, a.y, (a.r || 15) + 18, P.healer, 3);
+          burst(a.x, a.y, P.healer, 5);
+          if (pk('heal_aoe')){
+            const Lh = pk('heal_aoe'), R2 = PN.aoeR(Lh), part = S.heal * PN.aoePct(Lh);
+            ringFx(a.x, a.y, R2, P.healer, 4);
+            for (const o of [player].concat(minions)){
+              if (o === a || o.dead || o.hp >= o.maxHp) continue;
+              if (Math.hypot(o.x - a.x, o.y - a.y) <= R2){
+                o.hp = Math.min(o.maxHp, o.hp + part);
+                floatText(o.x, o.y, '+' + Math.round(part), P.healer, (o.r || 15) * 2.5 + 8);
+              }
+            }
+          }
+        }
+      }
     }
-    m.x = clamp(m.x + mx * T_.speed * dt, m.r, WORLD.w - m.r);
-    m.y = clamp(m.y + my * T_.speed * dt, m.r, WORLD.h - m.r);
-  });
+    m.x = clamp(m.x + mx * spd * dt, m.r, WORLD.w - m.r);
+    m.y = clamp(m.y + my * spd * dt, m.r, WORLD.h - m.r);
+  }
   for (let i = 0; i < minions.length; i++){
     const a = minions[i]; if (a.dead) continue;
     for (let j = i + 1; j < minions.length; j++){
@@ -786,11 +1120,6 @@ function update(dt){
         if (m.dead) continue;
         if (Math.hypot(m.x - s.x, m.y - s.y) < m.r + s.r){ hurtMinion(m, s.dmg); s.dead = true; burst(s.x, s.y, P.foe, 5); break; }
       }
-    } else {
-      for (const e of enemies){
-        if (e.dead || e.spawnT > 0) continue;
-        if (Math.hypot(e.x - s.x, e.y - s.y) < e.r + s.r){ hurtEnemy(e, s.dmg); s.dead = true; burst(s.x, s.y, P.archer, 4); break; }
-      }
     }
   }
 
@@ -815,6 +1144,7 @@ function update(dt){
   for (const p of parts){ p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.92; p.vy *= 0.92; p.life -= dt; }
   for (const f of floats){ f.y -= 34 * dt; f.life -= dt; }
   for (const r of rings){ r.t += dt; }
+  for (const b of beams){ b.t += dt; }
 
   orbs = orbs.filter(o => !o.dead);
   enemies = enemies.filter(e => !e.dead);
@@ -823,6 +1153,7 @@ function update(dt){
   parts = parts.filter(p => p.life > 0);
   floats = floats.filter(f => f.life > 0);
   rings = rings.filter(r => r.t < r.max);
+  beams = beams.filter(b => b.t < b.max);
 }
 
 function camUpdate(dt){
@@ -849,7 +1180,7 @@ function glow(x, y, r, col, a){
   ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
 }
 function blob(cx, cy, rx, ry, fill){
-  ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU);
+  ctx.beginPath(); ctx.ellipse(cx, cy, Math.max(0, rx), Math.max(0, ry), 0, 0, TAU);
   ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = OUTLINE; ctx.lineWidth = 2; ctx.stroke();
 }
 function poly(pts, fill){
@@ -863,7 +1194,7 @@ function rr(x, y, w, h, r, fill){
   ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = OUTLINE; ctx.lineWidth = 2; ctx.stroke();
 }
 function dot(cx, cy, rx, ry, fill){
-  ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU); ctx.fillStyle = fill; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx, cy, Math.max(0, rx), Math.max(0, ry), 0, 0, TAU); ctx.fillStyle = fill; ctx.fill();
 }
 function eyes(cx, cy, gap, r, look, col, angry){
   dot(cx - gap + look, cy, r, r * 1.2, col || EYE);
@@ -887,12 +1218,12 @@ function smile(cx, cy, w, look){
   ctx.strokeStyle = EYE; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.arc(cx + look, cy, w, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
 }
-function brackets(x, y, r, col){
-  ctx.strokeStyle = col; ctx.lineWidth = 2.5;
-  for (let i = 0; i < 4; i++){
-    const a = i * Math.PI / 2 + (reduceMotion ? 0 : T * 1.2);
-    ctx.beginPath(); ctx.arc(x, y, r, a - 0.28, a + 0.28); ctx.stroke();
-  }
+function drawShield(cy, rad, hit){
+  const a = 0.3 + (hit > 0 ? 0.4 : 0);
+  ctx.save();
+  ctx.fillStyle = rgba(P.healer, 0.1 + a * 0.2); ctx.strokeStyle = rgba(P.healer, a + 0.25); ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.ellipse(0, cy, rad, rad * 1.05, 0, 0, TAU); ctx.fill(); ctx.stroke();
+  ctx.restore();
 }
 function drawRitual(){
   const cx = WORLD.w / 2, cy = WORLD.h / 2;
@@ -949,6 +1280,19 @@ function drawEnemy(e){
     dot(look, -R * 0.75, R * 0.5, R * 0.2, EYE);
     poly([[look - R * 0.38, -R * 0.85], [look - R * 0.25, -R * 0.5], [look - R * 0.12, -R * 0.85]], CREAM);
     poly([[look + R * 0.38, -R * 0.85], [look + R * 0.25, -R * 0.5], [look + R * 0.12, -R * 0.85]], CREAM);
+  } else if (e.kind === 'boss'){
+    const st = Math.sin(T * 5) * 0.03;
+    ctx.scale(1 + st, 1 - st);
+    blob(-R * 0.55, -R * 0.15, R * 0.45, R * 0.3, col); blob(R * 0.55, -R * 0.15, R * 0.45, R * 0.3, col);
+    blob(-R * 1.25, -R * 0.9 + wob * 3, R * 0.4, R * 0.6, col); blob(R * 1.25, -R * 0.9 - wob * 3, R * 0.4, R * 0.6, col);
+    blob(0, -R * 1.1, R * 1.2, R * 1.05, col);
+    dot(0, -R * 0.85, R * 0.7, R * 0.5, 'rgba(0,0,0,0.18)');
+    poly([[-R * 0.8, -R * 2.0], [-R * 0.8, -R * 2.7], [-R * 0.4, -R * 2.3], [0, -R * 2.85], [R * 0.4, -R * 2.3], [R * 0.8, -R * 2.7], [R * 0.8, -R * 2.0]], '#ffd36b');
+    dot(0, -R * 2.3, R * 0.12, R * 0.12, P.hp);
+    eyes(0, -R * 1.3, R * 0.42, R * 0.17, look, '#ffd36b', true);
+    dot(look, -R * 0.7, R * 0.55, R * 0.22, EYE);
+    poly([[look - R * 0.4, -R * 0.8], [look - R * 0.27, -R * 0.4], [look - R * 0.13, -R * 0.8]], CREAM);
+    poly([[look + R * 0.4, -R * 0.8], [look + R * 0.27, -R * 0.4], [look + R * 0.13, -R * 0.8]], CREAM);
   } else {
     blob(-R * 0.5, -R * 0.12, R * 0.4, R * 0.25, col); blob(R * 0.5, -R * 0.12, R * 0.4, R * 0.25, col);
     ctx.strokeStyle = OUTLINE; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -R * 2.0); ctx.lineTo(R * 0.2, -R * 2.55); ctx.stroke();
@@ -971,14 +1315,15 @@ function drawEnemy(e){
 function drawMinion(m){
   const T_ = m.type, R = m.r, col = P[T_.key], flash = m.flash > 0, key = T_.key;
   const dir = Math.cos(m.face) >= 0 ? 1 : -1, look = dir * R * 0.18;
-  const hover = key === 'golem' ? 0 : 5 + Math.sin(T * 8 + m.id) * 2.2;
+  const hover = (key === 'golem' ? 0 : 5 + Math.sin(T * 8 + m.id) * 2.2) + (m.air || 0);
   const fillCol = flash ? '#ffffff' : col;
   ctx.save();
-  ctx.globalAlpha = m.life < 2 ? 0.5 + 0.5 * Math.sin(T * 18) : 1;
-  dot(0, 0, R * (1 - hover * 0.02), R * 0.4, rgba(P.ink, 0.2));
+  ctx.globalAlpha = 1 - m.born * 0.6;
+  dot(0, 0, R * Math.max(0.3, 1 - hover * 0.012), R * 0.4 * Math.max(0.3, 1 - hover * 0.01), rgba(P.ink, 0.2));   /* shadow shrinks while airborne */
   glow(0, -R * 1.1 - hover, R * 3, col, 0.3);
   ctx.translate(0, -hover);
-  ctx.scale(1 + m.pulse * 0.12, 1 - m.pulse * 0.12);
+  const bs = 1 - m.born * 0.5;
+  ctx.scale((1 + m.pulse * 0.12) * bs, (1 - m.pulse * 0.12) * bs);
   if (key === 'imp'){
     const flap = Math.sin(T * 22 + m.id) * R * 0.3, wc = flash ? '#ffffff' : rgba(col, 0.75);
     poly([[-R * 0.8, -R * 1.3], [-R * 1.9, -R * 2.0 + flap], [-R * 1.0, -R * 0.7]], wc);
@@ -991,22 +1336,38 @@ function drawMinion(m){
     eyes(0, -R * 1.15, R * 0.4, R * 0.2, look);
     blush(0, -R * 0.82, R * 0.4, R * 0.2, look);
     smile(0, -R * 0.9, R * 0.17, look);
-  } else if (key === 'archer'){
-    const w = Math.sin(T * 6 + m.id) * 1.5, bx = dir * R * 1.15, by = -R * 1.0;
-    ctx.beginPath();
-    ctx.moveTo(-R * 1.1, -R * 0.2);
-    ctx.bezierCurveTo(-R * 1.2, -R * 2.4, R * 1.2, -R * 2.4, R * 1.1, -R * 0.2);
-    ctx.lineTo(R * 0.75, -R * 0.55 + w); ctx.lineTo(R * 0.35, -R * 0.05); ctx.lineTo(-R * 0.05, -R * 0.55 - w);
-    ctx.lineTo(-R * 0.45, -R * 0.05); ctx.lineTo(-R * 0.8, -R * 0.55 + w); ctx.closePath();
-    ctx.fillStyle = fillCol; ctx.fill(); ctx.strokeStyle = OUTLINE; ctx.lineWidth = 2; ctx.stroke();
-    eyes(0, -R * 1.15, R * 0.4, R * 0.19, look);
-    blush(0, -R * 0.85, R * 0.4, R * 0.2, look);
-    smile(0, -R * 0.93, R * 0.15, look);
-    const a0 = dir > 0 ? -1.1 : Math.PI - 1.1, a1 = dir > 0 ? 1.1 : Math.PI + 1.1, br = R * 0.9;
-    ctx.strokeStyle = '#8a6a4a'; ctx.lineWidth = 3; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.arc(bx, by, br, a0, a1); ctx.stroke();
-    ctx.strokeStyle = 'rgba(40,30,40,0.6)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(bx + Math.cos(a0) * br, by + Math.sin(a0) * br); ctx.lineTo(bx + Math.cos(a1) * br, by + Math.sin(a1) * br); ctx.stroke();
+  } else if (key === 'mage'){
+    const BONE = '#efe8d4', DARK = '#1a1226', sx = dir * R * 1.35;
+    ctx.strokeStyle = '#8a6a4a'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';          /* staff, held on the side it faces */
+    ctx.beginPath(); ctx.moveTo(sx, -R * 0.2); ctx.lineTo(sx, -R * 2.7); ctx.stroke();
+    glow(sx, -R * 2.85, R * (1.3 + m.pulse * 1.2), col, 0.45 + m.pulse * 0.4);       /* the orb flares right after a shot */
+    blob(sx, -R * 2.85, R * 0.32, R * 0.32, fillCol);
+    poly([[-R * 0.95, -R * 0.1], [R * 0.95, -R * 0.1], [R * 0.62, -R * 1.45], [-R * 0.62, -R * 1.45]], fillCol);   /* robe */
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-R * 0.7, -R * 0.35); ctx.lineTo(R * 0.7, -R * 0.35); ctx.stroke();
+    blob(-R * 0.85, -R * 0.95, R * 0.26, R * 0.26, BONE); blob(R * 0.85, -R * 0.95, R * 0.26, R * 0.26, BONE);       /* bone hands */
+    blob(0, -R * 1.95, R * 1.05, R * 0.98, BONE);                                                                    /* skull */
+    poly([[-R * 1.0, -R * 2.45], [R * 1.0, -R * 2.45], [R * 0.12, -R * 3.7]], fillCol);                             /* pointy hat */
+    blob(0, -R * 2.45, R * 1.3, R * 0.3, fillCol);
+    dot(-R * 0.38 + look, -R * 1.95, R * 0.28, R * 0.34, DARK); dot(R * 0.38 + look, -R * 1.95, R * 0.28, R * 0.34, DARK);
+    dot(-R * 0.38 + look, -R * 1.95, R * 0.12, R * 0.15, col); dot(R * 0.38 + look, -R * 1.95, R * 0.12, R * 0.15, col);   /* glowing eyes */
+    poly([[look - R * 0.1, -R * 1.62], [look + R * 0.1, -R * 1.62], [look, -R * 1.48]], DARK);
+    ctx.strokeStyle = DARK; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(look - R * 0.4, -R * 1.25); ctx.lineTo(look + R * 0.4, -R * 1.25);
+    for (let i = -2; i <= 2; i++){ ctx.moveTo(look + i * R * 0.18, -R * 1.33); ctx.lineTo(look + i * R * 0.18, -R * 1.17); }
+    ctx.stroke();
+  } else if (key === 'healer'){
+    const flap = Math.sin(T * 12 + m.id) * R * 0.25, wc = flash ? '#ffffff' : 'rgba(255,255,255,0.85)';
+    poly([[-R * 0.8, -R * 1.2], [-R * 1.9, -R * 1.9 + flap], [-R * 1.1, -R * 0.6]], wc);
+    poly([[R * 0.8, -R * 1.2], [R * 1.9, -R * 1.9 + flap], [R * 1.1, -R * 0.6]], wc);
+    blob(0, -R * 1.05, R * 1.12, R * 1.05, fillCol);
+    ctx.strokeStyle = P.lantern; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.ellipse(0, -R * 2.4, R * 0.7, R * 0.22, 0, 0, TAU); ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(-R * 0.09, -R * 0.72, R * 0.18, R * 0.56); ctx.fillRect(-R * 0.27, -R * 0.53, R * 0.54, R * 0.18);
+    eyes(0, -R * 1.25, R * 0.4, R * 0.19, look);
+    blush(0, -R * 0.98, R * 0.4, R * 0.2, look);
+    smile(0, -R * 1.0, R * 0.15, look);
   } else {
     const body = flash ? '#ffffff' : STONE, head = flash ? '#ffffff' : STONE2;
     blob(-R * 0.5, -R * 0.15, R * 0.45, R * 0.3, body); blob(R * 0.5, -R * 0.15, R * 0.45, R * 0.3, body);
@@ -1022,8 +1383,9 @@ function drawMinion(m){
     ctx.beginPath(); ctx.moveTo(look * 0.6 - R * 0.18, -R * 1.38); ctx.lineTo(look * 0.6 + R * 0.18, -R * 1.38); ctx.stroke();
   }
   ctx.restore();
+  if (m.shield > 0) drawShield(-R * 1.2 - hover, R * 1.9, m.shieldHit);
   if (m.hp < m.maxHp){
-    const top = -R * 2.7 - 6;
+    const top = -R * (key === 'mage' ? 3.9 : 2.7) - 6;
     ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(-R, top, R * 2, 3);
     ctx.fillStyle = col; ctx.fillRect(-R, top, R * 2 * Math.max(0, m.hp / m.maxHp), 3);
   }
@@ -1064,40 +1426,12 @@ function drawPlayer(){
   poly([[-9, -40], [9, -40], [7.6, -44], [-7.6, -44]], P.lantern);
   if (!back) staff();
   ctx.restore();
+  if (player.shield > 0) drawShield(-26, 28, player.shieldHit);
 }
 
-function enemyAtScreen(sx, sy){
-  let best = null, bd = 1e9;
-  for (const e of enemies){
-    if (e.dead || e.spawnT > 0) continue;
-    const cx = (e.x - cam.x) * Z, cy = (e.y - cam.y) * TILT * Z - e.r * 1.1 * Z;
-    const d = Math.hypot(sx - cx, sy - cy);
-    if (d < e.r * 1.3 * Z + 14 && d < bd){ bd = d; best = e; }
-  }
-  return best;
-}
-function drawPreview(){
-  if (state !== 'play' || paused || !mouse.inside) return;
-  const t = TYPES[selected], w = toWorld(mouse.x, mouse.y);
-  const dx = w.x - player.x, dy = w.y - player.y, d = Math.hypot(dx, dy);
-  let px = w.x, py = w.y;
-  if (d > SUMMON_RANGE){ px = player.x + dx / d * SUMMON_RANGE; py = player.y + dy / d * SUMMON_RANGE; }
-  const ok = mana >= costOf(t) && minions.length < MAX_MINIONS;
-  ctx.setLineDash([6, 10]); ctx.lineWidth = 2;
-  ctx.strokeStyle = rgba(P.mana, 0.4);
-  ctx.beginPath(); ctx.arc(player.x, player.y, SUMMON_RANGE, 0, TAU); ctx.stroke();
-  ctx.setLineDash([]);
-  const col = ok ? P[t.key] : P.hp;
-  ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.globalAlpha = 0.9;
-  ctx.beginPath(); ctx.arc(px, py, t.r + 9, 0, TAU); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(px - 6, py); ctx.lineTo(px + 6, py); ctx.moveTo(px, py - 6); ctx.lineTo(px, py + 6); ctx.stroke();
-  ctx.globalAlpha = 1;
-  const he = enemyAtScreen(mouse.x, mouse.y);
-  if (he) brackets(he.x, he.y, he.r + 11, col);
-}
 function drawStick(){
   /* only show it once the finger has moved or been held a moment, so quick summon taps do not flash a joystick */
-  if (!stick.active || !(stick.moved || performance.now() - stick.t0 > 160)) return;
+  if (!stick.active) return;
   ctx.fillStyle = rgba(P.ink, 0.1); ctx.strokeStyle = rgba(P.ink, 0.35); ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(stick.ox, stick.oy, STICK_R, 0, TAU); ctx.fill(); ctx.stroke();
   ctx.fillStyle = rgba(P.ink, 0.45);
@@ -1137,16 +1471,20 @@ function draw(){
       ctx.beginPath(); ctx.arc(e.x, e.y, e.r + 14 * (1 - k), 0, TAU); ctx.stroke();
     }
   }
-  for (const m of minions){
-    const col = P[m.type.key];
-    ctx.strokeStyle = rgba(col, 0.8); ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(m.x, m.y, m.r + 7, -Math.PI / 2, -Math.PI / 2 + TAU * Math.max(0, m.life / m.maxLife)); ctx.stroke();
-    if (m.forced && !m.forced.dead){
-      ctx.strokeStyle = rgba(col, 0.3); ctx.lineWidth = 1.5; ctx.setLineDash([4, 6]);
-      ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.forced.x, m.forced.y); ctx.stroke(); ctx.setLineDash([]);
+  for (const e of enemies){          /* boss attack warnings on the floor */
+    if (!e.tele) continue;
+    const k = Math.min(1, e.tele.t / e.tele.dur);
+    if (e.tele.kind === 'ring'){
+      ctx.fillStyle = rgba(P.hp, 0.1 + 0.18 * k); ctx.strokeStyle = rgba(P.hp, 0.5 + 0.4 * k); ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.tele.r, 0, TAU); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.tele.r * k, 0, TAU); ctx.stroke();
+    } else {
+      ctx.save(); ctx.translate(e.x, e.y); ctx.rotate(e.tele.a);
+      ctx.fillStyle = rgba(P.hp, 0.12 + 0.2 * k); ctx.fillRect(0, -e.tele.w / 2, e.tele.len, e.tele.w);
+      ctx.strokeStyle = rgba(P.hp, 0.6); ctx.lineWidth = 2; ctx.strokeRect(0, -e.tele.w / 2, e.tele.len, e.tele.w);
+      ctx.restore();
     }
   }
-  drawPreview();
 
   /* characters, sorted so lower ones overlap higher ones */
   const list = [];
@@ -1175,12 +1513,27 @@ function draw(){
   /* shots fly above the ground */
   for (const s of shots){
     upright(s.x, s.y);
-    const col = s.hostile ? P.lantern : P.archer;
+    const col = s.hostile ? P.lantern : P.mage;
     dot(0, 0, s.r * 1.3, s.r * 0.5, rgba(P.ink, 0.2));
     ctx.translate(0, -16);
     glow(0, 0, s.r * 3, col, 0.5);
     dot(0, 0, s.r, s.r, s.hostile ? P.foe : col);
   }
+  /* laser beams: a white core that vanishes fast and a wider glow that lingers, like an afterimage */
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.lineCap = 'round';
+  for (const b of beams){
+    const k = b.t / b.max, fade = Math.pow(1 - k, 1.6), wz = b.w * Z;
+    const ax = (b.x1 - cam.x) * Z + shx, ay = ((b.y1 - cam.y) * TILT - b.h1) * Z + shy;
+    const bx = (b.x2 - cam.x) * Z + shx, by = ((b.y2 - cam.y) * TILT - b.h2) * Z + shy;
+    ctx.strokeStyle = rgba(P.mage, 0.22 * fade); ctx.lineWidth = 16 * wz * (1 - 0.4 * k);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.strokeStyle = rgba(P.mage, 0.6 * fade); ctx.lineWidth = 7 * wz * (1 - 0.6 * k);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.strokeStyle = rgba('#ffffff', 0.95 * Math.pow(1 - k, 3)); ctx.lineWidth = 2.6 * wz * (1 - 0.7 * k);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+  }
+  ctx.lineCap = 'butt';
   for (const p of parts){
     upright(p.x, p.y);
     ctx.globalAlpha = Math.max(0, p.life / p.max);
@@ -1211,11 +1564,12 @@ function draw(){
 let hudCache = {};
 function setText(el, key, v){ if (hudCache[key] !== v){ hudCache[key] = v; el.textContent = v; } }
 function hud(){
-  const hp = Math.max(0, Math.ceil(player.hp)), mn = Math.floor(mana);
+  let boss = null;
+  for (const e of enemies){ if (e.boss && !e.dead){ boss = e; break; } }
+  bossBar.classList.toggle('hide', !boss);
+  if (boss){ bossFill.style.width = Math.max(0, boss.hp / boss.maxHp * 100) + '%'; setText(bossName, 'bn', 'บอส'); }
   hpFill.style.width = (player.hp / player.maxHp * 100) + '%';
-  manaFill.style.width = (mana / MAXMANA * 100) + '%';
-  costMark.style.left = (costOf(TYPES[selected]) / MAXMANA * 100) + '%';
-  setText(hpNum, 'hp', hp); setText(manaNum, 'mn', mn);
+  setText(hpNum, 'hp', Math.max(0, Math.ceil(player.hp)));
   setText(waveNum, 'wv', wave); setText(scoreNum, 'sc', score);
   if (hudCache.so !== souls){
     if (hudCache.so !== undefined && souls > hudCache.so){
@@ -1223,13 +1577,15 @@ function hud(){
     }
     setText(soulNum, 'so', souls);
   }
-  slots.forEach((b, i) => {
-    const t = TYPES[i], locked = !UNLOCKED[t.key], c = costOf(t);
-    b.classList.toggle('sel', i === selected);
-    b.classList.toggle('locked', locked);
-    b.classList.toggle('poor', !locked && mana < c);
-    if (costEls[i]) setText(costEls[i], 'c' + i, locked ? 'ล็อก' : c);
-  });
+  for (const t of TYPES){
+    const c = cells[t.key];
+    let total = 0, alive = 0, soon = 1e9;
+    for (const sl of squad){ if (sl.key !== t.key) continue; total++; if (sl.m) alive++; else soon = Math.min(soon, sl.cd); }
+    c.el.classList.toggle('off', total === 0);
+    if (!total) continue;
+    setText(c.n, 'pn' + t.key, alive + '/' + total);
+    setText(c.e, 'pe' + t.key, alive < total ? 'เกิดใน ' + Math.max(1, Math.ceil(soon)) + ' วิ' : '');
+  }
 }
 
 /* ---------- input ---------- */
@@ -1257,8 +1613,7 @@ cv.addEventListener('pointerdown', e => {
   if (state !== 'play' || paused || inShop) return;
   e.preventDefault();
   updateMouse(e);
-  /* touch: the first finger anywhere on the field is the joystick (hold + drag = walk, quick tap = summon);
-     a second finger always summons right away */
+  /* touch: the first finger anywhere on the field is the joystick (hold + drag = walk) */
   if (e.pointerType === 'touch' && !stick.active){
     stick.active = true; stick.id = e.pointerId; stick.moved = false;
     stick.ox = stick.px = stick.sx = mouse.x; stick.oy = stick.py = stick.sy = mouse.y;
@@ -1267,16 +1622,10 @@ cv.addEventListener('pointerdown', e => {
     try { cv.setPointerCapture(e.pointerId); } catch (err) {}
     return;
   }
-  if (e.pointerType === 'mouse' && e.button !== 0) return;
-  const w = toWorld(mouse.x, mouse.y);
-  summonAt(w.x, w.y, mouse.x, mouse.y);
 });
 function endPointer(e){
   if (e.pointerId === stick.id){
-    /* lifting the finger quickly without having moved it is a tap: summon where it landed */
-    const tap = e.type === 'pointerup' && !stick.moved && performance.now() - stick.t0 < 220;
     stick.active = false; stick.id = -1; stick.dx = stick.dy = 0;
-    if (tap && state === 'play' && !paused && !inShop){ const w = toWorld(stick.sx, stick.sy); summonAt(w.x, w.y, stick.sx, stick.sy); }
   }
   if (e.pointerType === 'touch') mouse.inside = false;
 }
@@ -1284,12 +1633,6 @@ cv.addEventListener('pointerup', endPointer);
 cv.addEventListener('pointercancel', endPointer);
 cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') mouse.inside = false; });
 cv.addEventListener('contextmenu', e => e.preventDefault());
-cv.addEventListener('wheel', e => {
-  if (state !== 'play' || paused || inShop) return;
-  e.preventDefault();
-  cycleSel(e.deltaY > 0 ? 1 : -1);
-}, { passive:false });
-
 window.addEventListener('keydown', e => {
   const c = e.code;
   if (c === 'ArrowUp' || c === 'ArrowDown' || c === 'ArrowLeft' || c === 'ArrowRight' || c === 'Space'){
@@ -1297,16 +1640,13 @@ window.addEventListener('keydown', e => {
   }
   if (c === 'Enter'){
     e.preventDefault();
-    if (inShop) closeShop();
+    if (inShop){ if (!perkOpen) closeShop(); }
     else if (state === 'play' && paused) setPaused(false); else if (state !== 'play') startGame();
     return;
   }
   if (c === 'KeyP' || c === 'Escape'){ if (state === 'play' && !inShop) setPaused(!paused); return; }
   if (state !== 'play' || paused || inShop) return;
-  if (c === 'Digit1' || c === 'Numpad1') select(0);
-  else if (c === 'Digit2' || c === 'Numpad2') select(1);
-  else if (c === 'Digit3' || c === 'Numpad3') select(2);
-  else keys.add(c);
+  keys.add(c);
 });
 window.addEventListener('keyup', e => keys.delete(e.code));
 window.addEventListener('blur', () => { keys.clear(); if (state === 'play' && !paused && !inShop) setPaused(true); });
@@ -1336,7 +1676,6 @@ readPalette();
 resize();
 resetWorld();
 best = loadBest();
-select(0);
 showOverlay('title');
 requestAnimationFrame(frame);
 })();
